@@ -5,996 +5,869 @@
 {% block title %}Dashboard - School Management System{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        --dark-gradient: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    /* All styles are scoped to .dash so nothing leaks into the base layout */
+    .dash {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --surface: #ffffff;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
     }
-    
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 1.5rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    .dash .num { font-variant-numeric: tabular-nums; }
+
+    /* ---------- Page header ---------- */
+    .dash .page-head {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        flex-wrap: wrap; gap: 16px; margin-bottom: 28px;
     }
-    
-    .dashboard-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 15px;
+    .dash .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .dash .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+    .dash .page-head p strong { color: var(--ink); font-weight: 600; }
+    .dash .date-chip {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 14px; font-size: .85rem; font-weight: 500; color: var(--ink-soft);
+        background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
     }
-    
-    .dashboard-header .welcome-text {
-        font-size: 0.95rem;
-        opacity: 0.95;
-        margin-top: 0.5rem;
+    .dash .date-chip i { color: var(--muted); }
+
+    /* ---------- Tones ---------- */
+    .dash .tone-blue   { --t-bg: #eff6ff; --t-fg: #1d4ed8; }
+    .dash .tone-green  { --t-bg: #ecfdf5; --t-fg: #047857; }
+    .dash .tone-amber  { --t-bg: #fffbeb; --t-fg: #b45309; }
+    .dash .tone-violet { --t-bg: #f5f3ff; --t-fg: #6d28d9; }
+    .dash .tone-red    { --t-bg: #fef2f2; --t-fg: #b91c1c; }
+    .dash .tone-slate  { --t-bg: #f1f5f9; --t-fg: #475569; }
+
+    /* ---------- KPI cards ---------- */
+    .dash .stat {
+        height: 100%; padding: 20px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
     }
-    
-    .stat-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        border: none;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        height: 100%;
+    .dash .stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .dash .stat-label { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    .dash .stat-icon {
+        width: 36px; height: 36px; border-radius: 10px; flex: none;
+        display: grid; place-items: center; font-size: 1.05rem;
+        background: var(--t-bg); color: var(--t-fg);
     }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    .dash .stat-value { font-size: 1.85rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .dash .stat-meta { margin-top: 10px; font-size: .8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .dash .stat-meta i { color: var(--t-fg); }
+
+    /* ---------- Metric strip ---------- */
+    .dash .metric-strip {
+        display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04); overflow: hidden;
     }
-    
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--card-gradient);
+    .dash .metric { padding: 18px 20px; border-right: 1px solid var(--line-soft); min-width: 0; }
+    .dash .metric:last-child { border-right: 0; }
+    .dash .metric-label { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+    .dash .metric-label i { color: var(--t-fg); font-size: .95rem; }
+    .dash .metric-value { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @media (max-width: 1199.98px) {
+        .dash .metric-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .dash .metric:nth-child(3) { border-right: 0; }
+        .dash .metric:nth-child(-n+3) { border-bottom: 1px solid var(--line-soft); }
     }
-    
-    .stat-card.primary::before { background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); }
-    .stat-card.success::before { background: linear-gradient(90deg, #56ab2f 0%, #a8e063 100%); }
-    .stat-card.info::before { background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); }
-    .stat-card.warning::before { background: linear-gradient(90deg, #fa709a 0%, #fee140 100%); }
-    .stat-card.danger::before { background: linear-gradient(90deg, #ff6a00 0%, #ee0979 100%); }
-    .stat-card.dark::before { background: linear-gradient(90deg, #30cfd0 0%, #330867 100%); }
-    
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 1rem;
+    @media (max-width: 575.98px) {
+        .dash .metric-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dash .metric, .dash .metric:nth-child(3) { border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+        .dash .metric:nth-child(2n) { border-right: 0; }
+        .dash .metric:nth-last-child(-n+2) { border-bottom: 0; }
     }
-    
-    .stat-card.primary .stat-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .stat-card.success .stat-icon { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; }
-    .stat-card.info .stat-icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-    .stat-card.warning .stat-icon { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
-    .stat-card.danger .stat-icon { background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); color: white; }
-    .stat-card.dark .stat-icon { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
-    
-    .stat-label {
-        font-size: 0.85rem;
-        color: #6c757d;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
+
+    /* ---------- Panels ---------- */
+    .dash .panel {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04); overflow: hidden; height: 100%;
     }
-    
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2d3748;
-        line-height: 1;
+    .dash .panel-head {
+        display: flex; align-items: center; gap: 10px;
+        padding: 16px 20px; border-bottom: 1px solid var(--line);
+        font-size: .95rem; font-weight: 600;
     }
-        .stat-value {
-            font-size: 1.2rem;
-        }
-    
-    .content-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        border: none;
-        margin-bottom: 1.5rem;
-        overflow: hidden;
+    .dash .panel-head i { color: var(--muted); }
+    .dash .panel-body { padding: 20px; }
+    .dash .panel-foot { padding: 14px 20px; border-top: 1px solid var(--line-soft); background: var(--canvas); }
+
+    /* ---------- Tabs ---------- */
+    .dash .tabs-head { padding: 0 8px; border-bottom: 1px solid var(--line); }
+    .dash .nav-tabs { border: 0; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+    .dash .nav-tabs::-webkit-scrollbar { display: none; }
+    .dash .nav-tabs .nav-link {
+        display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+        padding: 16px 14px; margin: 0 0 -1px; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+        font-size: .875rem; font-weight: 500; color: var(--muted); background: transparent;
+        transition: color .15s, border-color .15s;
     }
-    
-    .content-card .card-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-bottom: 3px solid #667eea;
-        padding: 1.25rem 1.5rem;
-        font-weight: 700;
-        color: #2d3748;
-        font-size: 1.1rem;
+    .dash .nav-tabs .nav-link:hover { color: var(--ink); }
+    .dash .nav-tabs .nav-link.active { color: var(--brand); border-bottom-color: var(--brand); background: transparent; }
+    .dash .nav-tabs .nav-link:focus-visible { outline: 0; box-shadow: inset 0 0 0 3px var(--ring); }
+    .dash .tab-title { font-size: .95rem; font-weight: 600; margin: 0; }
+    .dash .tab-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    /* ---------- Tables ---------- */
+    .dash .table-clean { width: 100%; margin: 0; font-size: .875rem; --bs-table-bg: transparent; }
+    .dash .table-clean thead th {
+        padding: 10px 14px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--muted); background: var(--canvas); border-bottom: 1px solid var(--line); white-space: nowrap;
     }
-    
-    .content-card .card-body {
-        padding: 1.5rem;
+    .dash .table-clean thead th:first-child { border-top-left-radius: 8px; }
+    .dash .table-clean thead th:last-child { border-top-right-radius: 8px; }
+    .dash .table-clean tbody td { padding: 13px 14px; vertical-align: middle; color: var(--ink); border-bottom: 1px solid var(--line-soft); }
+    .dash .table-clean tbody tr:last-child td { border-bottom: 0; }
+    .dash .table-clean tbody tr:hover td { background: var(--canvas); }
+    .dash .cell-strong { font-weight: 600; }
+    .dash .cell-mono { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .dash .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+
+    /* ---------- Pills ---------- */
+    .dash .pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 3px 10px; font-size: .75rem; font-weight: 600; border-radius: 999px; line-height: 1.5;
+        background: var(--t-bg); color: var(--t-fg);
     }
-    
-    .quick-action-btn {
-        border-radius: 10px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        border: none;
-        transition: all 0.3s ease;
-        margin-bottom: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    .dash .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+
+    /* ---------- Buttons ---------- */
+    .dash .btn-solid, .dash .btn-ghost {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 14px; font-size: .85rem; font-weight: 600; border-radius: 9px; text-decoration: none;
+        transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
     }
-    
-    .quick-action-btn:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    .dash .btn-solid { color: #fff; background: var(--brand); border: 1px solid var(--brand); }
+    .dash .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .dash .btn-ghost { color: var(--ink); background: var(--surface); border: 1px solid var(--line); }
+    .dash .btn-ghost:hover { background: var(--canvas); border-color: #cbd5e1; color: var(--ink); }
+    .dash .btn-solid:focus-visible, .dash .btn-ghost:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .dash .btn-icon { padding: 6px 9px; }
+    .dash .btn-full { width: 100%; justify-content: center; }
+
+    /* ---------- Quick actions ---------- */
+    .dash .action-list { list-style: none; margin: 0; padding: 0; }
+    .dash .action-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; transition: background .15s; }
+    .dash .action-row:hover { background: var(--canvas); }
+    .dash .action-link {
+        flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
+        padding: 6px 4px; font-size: .9rem; font-weight: 500; color: var(--ink); text-decoration: none; border-radius: 8px;
     }
-    
-    .btn-gradient-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+    .dash .action-link:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+    .dash .action-link .stat-icon { width: 34px; height: 34px; font-size: 1rem; }
+    .dash .action-link .chev { margin-left: auto; color: #cbd5e1; font-size: .8rem; transition: transform .15s, color .15s; }
+    .dash .action-row:hover .chev { color: var(--muted); transform: translateX(2px); }
+    .dash .add-chip {
+        display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px;
+        font-size: .75rem; font-weight: 600; color: var(--brand); background: var(--brand-50);
+        border-radius: 999px; text-decoration: none; white-space: nowrap; transition: background .15s;
     }
-    
-    .btn-gradient-success {
-        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
-        color: white;
+    .dash .add-chip:hover { background: #dbeafe; color: var(--brand-700); }
+    .dash .add-chip:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+    /* ---------- Key/value rows ---------- */
+    .dash .kv { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--line-soft); font-size: .9rem; }
+    .dash .kv:first-child { padding-top: 0; }
+    .dash .kv:last-child { border-bottom: 0; padding-bottom: 0; }
+    .dash .kv-label { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); }
+    .dash .kv-label .stat-icon { width: 30px; height: 30px; border-radius: 8px; font-size: .9rem; }
+    .dash .kv-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .dash .field-block { padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+    .dash .field-block:first-child { padding-top: 0; }
+    .dash .field-block:last-child { border-bottom: 0; padding-bottom: 0; }
+    .dash .field-block .k { font-size: .78rem; font-weight: 500; color: var(--muted); margin-bottom: 3px; }
+    .dash .field-block .v { font-size: .95rem; font-weight: 600; }
+
+    /* ---------- Empty state ---------- */
+    .dash .empty { text-align: center; padding: 36px 16px; color: var(--muted); font-size: .9rem; }
+    .dash .empty i { display: block; font-size: 1.6rem; margin-bottom: 8px; color: #cbd5e1; }
+    .dash .table-clean td.empty { border-bottom: 0; }
+
+    /* ---------- Items (classes / children) ---------- */
+    .dash .item-card { padding: 16px; border: 1px solid var(--line); border-radius: 10px; height: 100%; background: var(--surface); transition: border-color .15s, box-shadow .15s; }
+    .dash .item-card:hover { border-color: #cbd5e1; box-shadow: 0 2px 8px rgba(15, 23, 42, .05); }
+    .dash .item-card h5 { font-size: 1rem; font-weight: 600; margin: 0 0 4px; }
+    .dash .item-meta { font-size: .85rem; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .dash .avatar {
+        width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+        background: var(--t-bg); color: var(--t-fg); font-size: 1.3rem; margin-bottom: 12px;
     }
-    
-    .btn-gradient-info {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
+
+    .dash .subject-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line-soft); font-size: .9rem; }
+    .dash .subject-row:first-child { padding-top: 0; }
+    .dash .subject-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .dash .subject-row i { color: #059669; }
+    .dash .subject-row .code { color: var(--muted); font-size: .8rem; margin-left: auto; }
+
+    /* ---------- Technical admin ---------- */
+    .dash .tech-card { border-color: #fde68a; }
+    .dash .tech-card .panel-head { background: #fffbeb; border-bottom-color: #fde68a; }
+    .dash .tech-card .panel-head i { color: #b45309; }
+    .dash .tech-note { font-size: .85rem; color: var(--ink-soft); line-height: 1.6; }
+
+    @media (max-width: 767.98px) {
+        .dash .page-head h1 { font-size: 1.4rem; }
+        .dash .stat-value { font-size: 1.5rem; }
     }
-    
-    .btn-gradient-warning {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        color: white;
-    }
-    
-    .table-modern {
-        border: none;
-    }
-    
-    .table-modern thead th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        padding: 1rem;
-    }
-    
-    .table-modern tbody tr {
-        transition: all 0.3s ease;
-    }
-    
-    .table-modern tbody tr:hover {
-        background: #f8f9fa;
-        transform: scale(1.01);
-    }
-    
-    .table-modern tbody td {
-        padding: 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    .badge-modern {
-        padding: 0.5rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    
-    .date-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 0.5rem 1.5rem;
-        border-radius: 50px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    @media (max-width: 768px) {
-        .dashboard-header h1 {
-            font-size: 1.5rem;
-        }
-        .stat-value {
-            font-size: 1.2rem;
-        }
-        .main-content {
-            padding-bottom: 3.5rem !important;
-        }
-    }
+    @media (prefers-reduced-motion: reduce) { .dash * { transition: none !important; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Dashboard Header -->
-<div class="dashboard-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
+<div class="dash">
+
+    <!-- Page header -->
+    <header class="page-head">
         <div>
-            <h1>
-                <i class="bi bi-speedometer2"></i>
-                Dashboard
-            </h1>
-            <p class="welcome-text mb-0">
-                Welcome back, <strong>{{ user.get_full_name|default:user.username }}</strong>! 
-                Here's what's happening today.
-            </p>
+            <h1>Dashboard</h1>
+            <p>Welcome back, <strong>{{ user.get_full_name|default:user.username }}</strong>. Here's what's happening today.</p>
         </div>
-        <div class="mt-3 mt-md-0">
-            <span class="date-badge">
-                <i class="bi bi-calendar3"></i>
-                {{ current_date|date:"l, F d, Y" }}
-            </span>
-        </div>
-    </div>
-</div>
+        <span class="date-chip">
+            <i class="bi bi-calendar3"></i>
+            {{ current_date|date:"l, F d, Y" }}
+        </span>
+    </header>
 
 {% if user.is_admin or user.is_staff_member or user.is_superuser %}
-    <!-- Admin Dashboard Statistics -->
-    <div class="row g-4 mb-4">
+
+    <!-- Primary KPIs -->
+    <div class="row g-3 g-lg-4 mb-4">
         <div class="col-xl-3 col-md-6">
-            <div class="stat-card primary">
-                <div class="stat-icon">
-                    <i class="bi bi-people-fill"></i>
+            <div class="stat tone-blue">
+                <div class="stat-top">
+                    <span class="stat-label">Total Students</span>
+                    <span class="stat-icon"><i class="bi bi-people-fill"></i></span>
                 </div>
-                <div class="stat-label">Total Students</div>
                 <div class="stat-value">{{ total_students|default:0|intcomma }}</div>
-                <small class="text-muted">
-                    <i class="bi bi-arrow-up text-success"></i>
-                    {{ active_students|default:0 }} active
-                </small>
+                <div class="stat-meta"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> {{ active_students|default:0 }} active</div>
             </div>
         </div>
-
         <div class="col-xl-3 col-md-6">
-            <div class="stat-card success">
-                <div class="stat-icon">
-                    <i class="bi bi-person-badge-fill"></i>
+            <div class="stat tone-green">
+                <div class="stat-top">
+                    <span class="stat-label">Total Teachers</span>
+                    <span class="stat-icon"><i class="bi bi-person-badge-fill"></i></span>
                 </div>
-                <div class="stat-label">Total Teachers</div>
                 <div class="stat-value">{{ total_teachers|default:0|intcomma }}</div>
-                <small class="text-muted">
-                    <i class="bi bi-check-circle text-success"></i>
-                    {{ active_teachers|default:0 }} active
-                </small>
+                <div class="stat-meta"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> {{ active_teachers|default:0 }} active</div>
             </div>
         </div>
-
         <div class="col-xl-3 col-md-6">
-            <div class="stat-card info">
-                <div class="stat-icon">
-                    <i class="bi bi-door-open-fill"></i>
+            <div class="stat tone-violet">
+                <div class="stat-top">
+                    <span class="stat-label">Total Classes</span>
+                    <span class="stat-icon"><i class="bi bi-door-open-fill"></i></span>
                 </div>
-                <div class="stat-label">Total Classes</div>
                 <div class="stat-value">{{ total_classes|default:0|intcomma }}</div>
-                <small class="text-muted">
-                    <i class="bi bi-check-circle text-success"></i>
-                    {{ active_classes|default:0 }} active
-                </small>
+                <div class="stat-meta"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> {{ active_classes|default:0 }} active</div>
             </div>
         </div>
-
         <div class="col-xl-3 col-md-6">
-            <div class="stat-card warning">
-                <div class="stat-icon">
-                    <i class="bi bi-clipboard-data-fill"></i>
+            <div class="stat tone-amber">
+                <div class="stat-top">
+                    <span class="stat-label">Total Exams</span>
+                    <span class="stat-icon"><i class="bi bi-clipboard-data-fill"></i></span>
                 </div>
-                <div class="stat-label">Total Exams</div>
                 <div class="stat-value">{{ total_exams|default:0|intcomma }}</div>
-                <small class="text-muted">
-                    <i class="bi bi-clock text-warning"></i>
-                    {{ upcoming_exams|default:0 }} upcoming
-                </small>
+                <div class="stat-meta"><i class="bi bi-clock"></i> {{ upcoming_exams|default:0 }} upcoming</div>
             </div>
         </div>
     </div>
 
-    <!-- Secondary Stats Row -->
-    <div class="row g-4 mb-4">
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-success">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Present Today</div>
-                        <div class="stat-value text-success">{{ today_attendance|default:0|intcomma }}</div>
-                    </div>
-                </div>
-            </div>
+    <!-- Secondary metrics -->
+    <div class="metric-strip mb-4">
+        <div class="metric tone-green">
+            <div class="metric-label"><i class="bi bi-check-circle-fill"></i> Present Today</div>
+            <div class="metric-value">{{ today_attendance|default:0|intcomma }}</div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-danger">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Absent Today</div>
-                        <div class="stat-value text-danger">{{ today_absent|default:0|intcomma }}</div>
-                    </div>
-                </div>
-            </div>
+        <div class="metric tone-red">
+            <div class="metric-label"><i class="bi bi-x-circle-fill"></i> Absent Today</div>
+            <div class="metric-value">{{ today_absent|default:0|intcomma }}</div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-warning">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Payments (30d)</div>
-                        <div class="stat-value text-warning">{{ total_revenue_30days|default:0|floatformat:0|intcomma }} Frw</div>
-                    </div>
-                </div>
-            </div>
+        <div class="metric tone-amber">
+            <div class="metric-label"><i class="bi bi-cash-stack"></i> Payments (30d)</div>
+            <div class="metric-value">{{ total_revenue_30days|default:0|floatformat:0|intcomma }} Frw</div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-info">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-bar-chart-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Avg Score</div>
-                        <div class="stat-value text-info">{{ avg_score|default:0 }}%</div>
-                    </div>
-                </div>
-            </div>
+        <div class="metric tone-blue">
+            <div class="metric-label"><i class="bi bi-bar-chart-fill"></i> Avg Score</div>
+            <div class="metric-value">{{ avg_score|default:0 }}%</div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-primary">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-file-earmark-text-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Total Results</div>
-                        <div class="stat-value text-primary">{{ total_results|default:0|intcomma }}</div>
-                    </div>
-                </div>
-            </div>
+        <div class="metric tone-violet">
+            <div class="metric-label"><i class="bi bi-file-earmark-text-fill"></i> Total Results</div>
+            <div class="metric-value">{{ total_results|default:0|intcomma }}</div>
         </div>
-        <div class="col-xl-2 col-md-4">
-            <div class="stat-card-mini stat-success">
-                <div class="d-flex align-items-center">
-                    <div class="stat-icon">
-                        <i class="bi bi-arrow-up-circle-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="stat-label">Promotions</div>
-                        <div class="stat-value text-success">{{ total_promotions|default:0|intcomma }}</div>
-                    </div>
-                </div>
-            </div>
+        <div class="metric tone-green">
+            <div class="metric-label"><i class="bi bi-arrow-up-circle-fill"></i> Promotions</div>
+            <div class="metric-value">{{ total_promotions|default:0|intcomma }}</div>
         </div>
     </div>
 
-    <!-- Main Content Tabs -->
-    <div class="content-card mb-4">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" role="tablist">
+    <!-- Activity tabs -->
+    <section class="panel mb-4" style="height:auto">
+        <div class="tabs-head">
+            <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent" type="button" role="tab">
-                        <i class="bi bi-clock-history me-2"></i>Recent Activity
+                    <button class="nav-link active" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent" type="button" role="tab" aria-controls="recent" aria-selected="true">
+                        <i class="bi bi-clock-history"></i>Recent Activity
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">
-                        <i class="bi bi-people me-2"></i>New Students
+                    <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">
+                        <i class="bi bi-people"></i>New Students
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab">
-                        <i class="bi bi-bar-chart me-2"></i>Recent Results
+                    <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results" type="button" role="tab" aria-controls="results" aria-selected="false">
+                        <i class="bi bi-bar-chart"></i>Recent Results
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="promotions-tab" data-bs-toggle="tab" data-bs-target="#promotions" type="button" role="tab">
-                        <i class="bi bi-arrow-up-circle me-2"></i>Promotions
+                    <button class="nav-link" id="promotions-tab" data-bs-toggle="tab" data-bs-target="#promotions" type="button" role="tab" aria-controls="promotions" aria-selected="false">
+                        <i class="bi bi-arrow-up-circle"></i>Promotions
                     </button>
                 </li>
             </ul>
         </div>
-        <div class="card-body">
+
+        <div class="panel-body">
             <div class="tab-content">
-                <!-- Recent Payments Tab -->
-                <div class="tab-pane fade show active" id="recent" role="tabpanel">
-                    <h5 class="mb-3"><i class="bi bi-cash-stack me-2"></i>Recent Payments</h5>
-                    <div class="table-responsive">
-                        <table class="table table-modern">
-                            <thead>
-                                <tr>
-                                    <th>Receipt No</th>
-                                    <th>Student</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if recent_payments %}
-                                    {% for payment in recent_payments %}
-                                    <tr>
-                                        <td><strong>#{{ payment.receipt_number }}</strong></td>
-                                        <td>{{ payment.student.user.get_full_name }}</td>
-                                        <td><span class="badge" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 0.5rem 1rem;">{{ payment.amount_paid|intcomma }} Frw</span></td>
-                                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
-                                        <td><span class="badge bg-success">Paid</span></td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                            No recent payments
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+
+                <!-- Recent Payments -->
+                <div class="tab-pane fade show active" id="recent" role="tabpanel" aria-labelledby="recent-tab">
+                    <div class="tab-bar">
+                        <h5 class="tab-title">Recent payments</h5>
+                        <a href="{% url 'fees:payment_list' %}" class="btn-ghost"><i class="bi bi-arrow-right"></i>View all payments</a>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'fees:payment_list' %}" class="btn btn-gradient-primary">
-                            <i class="bi bi-eye me-2"></i>View All Payments
-                        </a>
+                    <div class="table-wrap">
+                        <div class="table-responsive">
+                            <table class="table table-clean">
+                                <thead>
+                                    <tr>
+                                        <th>Receipt No</th>
+                                        <th>Student</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if recent_payments %}
+                                        {% for payment in recent_payments %}
+                                        <tr>
+                                            <td class="cell-mono">#{{ payment.receipt_number }}</td>
+                                            <td>{{ payment.student.user.get_full_name }}</td>
+                                            <td class="cell-mono">{{ payment.amount_paid|intcomma }} Frw</td>
+                                            <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                            <td><span class="pill tone-green">Paid</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="empty">
+                                                <i class="bi bi-inbox"></i>No recent payments
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent Students Tab -->
-                <div class="tab-pane fade" id="students" role="tabpanel">
-                    <h5 class="mb-3"><i class="bi bi-people me-2"></i>Recently Added Students</h5>
-                    <div class="table-responsive">
-                        <table class="table table-modern">
-                            <thead>
-                                <tr>
-                                    <th>Admission No</th>
-                                    <th>Name</th>
-                                    <th>Class</th>
-                                    <th>Gender</th>
-                                    <th>Date Added</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if recent_students %}
-                                    {% for student in recent_students %}
-                                    <tr>
-                                        <td><strong>{{ student.admission_number }}</strong></td>
-                                        <td>{{ student.user.get_full_name }}</td>
-                                        <td>{{ student.class_assigned.name }}</td>
-                                        <td>
-                                            {% if student.gender == 'M' %}
-                                            <span class="badge bg-primary">Male</span>
-                                            {% else %}
-                                            <span class="badge bg-danger">Female</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ student.created_at|date:"M d, Y" }}</td>
-                                        <td>
-                                            <a href="{% url 'students:student_detail' student.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                            No recent students
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+                <!-- Recent Students -->
+                <div class="tab-pane fade" id="students" role="tabpanel" aria-labelledby="students-tab">
+                    <div class="tab-bar">
+                        <h5 class="tab-title">Recently added students</h5>
+                        <a href="{% url 'students:student_list' %}" class="btn-ghost"><i class="bi bi-arrow-right"></i>View all students</a>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'students:student_list' %}" class="btn btn-gradient-success">
-                            <i class="bi bi-people me-2"></i>View All Students
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Recent Results Tab -->
-                <div class="tab-pane fade" id="results" role="tabpanel">
-                    <h5 class="mb-3"><i class="bi bi-bar-chart me-2"></i>Recent Exam Results</h5>
-                    <div class="table-responsive">
-                        <table class="table table-modern">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Exam</th>
-                                    <th>Subject</th>
-                                    <th>Score</th>
-                                    <th>Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if recent_results %}
-                                    {% for result in recent_results %}
+                    <div class="table-wrap">
+                        <div class="table-responsive">
+                            <table class="table table-clean">
+                                <thead>
                                     <tr>
-                                        <td>{{ result.student.user.get_full_name }}</td>
-                                        <td>{{ result.exam.title }}</td>
-                                        <td>{{ result.subject.name }}</td>
-                                        <td><strong>{{ result.score }}</strong></td>
-                                        <td>
-                                            <span class="badge {% if result.grade in 'AB' %}bg-success{% elif result.grade == 'C' %}bg-primary{% elif result.grade == 'D' %}bg-warning{% else %}bg-danger{% endif %}">
-                                                {{ result.grade }}
-                                            </span>
-                                        </td>
+                                        <th>Admission No</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Gender</th>
+                                        <th>Date Added</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                            No recent results
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-3">
-                        <a href="{% url 'exams:exam_list' %}" class="btn btn-gradient-info">
-                            <i class="bi bi-clipboard-data me-2"></i>Process Reports
-                        </a>
+                                </thead>
+                                <tbody>
+                                    {% if recent_students %}
+                                        {% for student in recent_students %}
+                                        <tr>
+                                            <td class="cell-mono">{{ student.admission_number }}</td>
+                                            <td class="cell-strong">{{ student.user.get_full_name }}</td>
+                                            <td>{{ student.class_assigned.name }}</td>
+                                            <td>
+                                                {% if student.gender == 'M' %}
+                                                <span class="pill tone-blue">Male</span>
+                                                {% else %}
+                                                <span class="pill tone-violet">Female</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ student.created_at|date:"M d, Y" }}</td>
+                                            <td class="text-end">
+                                                <a href="{% url 'students:student_detail' student.pk %}" class="btn-ghost btn-icon" aria-label="View {{ student.user.get_full_name }}">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="empty">
+                                                <i class="bi bi-inbox"></i>No recent students
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Promotions Tab -->
-                <div class="tab-pane fade" id="promotions" role="tabpanel">
-                    <h5 class="mb-3"><i class="bi bi-arrow-up-circle me-2"></i>Recent Promotions</h5>
-                    <div class="table-responsive">
-                        <table class="table table-modern">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>From Class</th>
-                                    <th>To Class</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if recent_promotions %}
-                                    {% for promotion in recent_promotions %}
-                                    <tr>
-                                        <td>{{ promotion.student.user.get_full_name }}</td>
-                                        <td>{{ promotion.from_class.name }}</td>
-                                        <td>
-                                            {% if promotion.to_class %}
-                                            {{ promotion.to_class.name }}
-                                            {% else %}
-                                            <em>Graduated</em>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if promotion.status == 'PROMOTED' %}
-                                            <span class="badge bg-success">Promoted</span>
-                                            {% elif promotion.status == 'DETAINED' %}
-                                            <span class="badge bg-warning">Detained</span>
-                                            {% else %}
-                                            <span class="badge bg-info">Graduated</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ promotion.promoted_on|date:"M d, Y" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                            No recent promotions
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+                <!-- Recent Results -->
+                <div class="tab-pane fade" id="results" role="tabpanel" aria-labelledby="results-tab">
+                    <div class="tab-bar">
+                        <h5 class="tab-title">Recent exam results</h5>
+                        <a href="{% url 'exams:exam_list' %}" class="btn-ghost"><i class="bi bi-arrow-right"></i>Process reports</a>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'promotions:promotion_list' %}" class="btn btn-gradient-warning">
-                            <i class="bi bi-list me-2"></i>View All Promotions
-                        </a>
+                    <div class="table-wrap">
+                        <div class="table-responsive">
+                            <table class="table table-clean">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Exam</th>
+                                        <th>Subject</th>
+                                        <th>Score</th>
+                                        <th>Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if recent_results %}
+                                        {% for result in recent_results %}
+                                        <tr>
+                                            <td class="cell-strong">{{ result.student.user.get_full_name }}</td>
+                                            <td>{{ result.exam.title }}</td>
+                                            <td>{{ result.subject.name }}</td>
+                                            <td class="cell-mono">{{ result.score }}</td>
+                                            <td>
+                                                <span class="pill {% if result.grade in 'AB' %}tone-green{% elif result.grade == 'C' %}tone-blue{% elif result.grade == 'D' %}tone-amber{% else %}tone-red{% endif %}">{{ result.grade }}</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="empty">
+                                                <i class="bi bi-inbox"></i>No recent results
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Promotions -->
+                <div class="tab-pane fade" id="promotions" role="tabpanel" aria-labelledby="promotions-tab">
+                    <div class="tab-bar">
+                        <h5 class="tab-title">Recent promotions</h5>
+                        <a href="{% url 'promotions:promotion_list' %}" class="btn-ghost"><i class="bi bi-arrow-right"></i>View all promotions</a>
+                    </div>
+                    <div class="table-wrap">
+                        <div class="table-responsive">
+                            <table class="table table-clean">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>From Class</th>
+                                        <th>To Class</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if recent_promotions %}
+                                        {% for promotion in recent_promotions %}
+                                        <tr>
+                                            <td class="cell-strong">{{ promotion.student.user.get_full_name }}</td>
+                                            <td>{{ promotion.from_class.name }}</td>
+                                            <td>
+                                                {% if promotion.to_class %}
+                                                {{ promotion.to_class.name }}
+                                                {% else %}
+                                                <span class="text-muted fst-italic">Graduated</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if promotion.status == 'PROMOTED' %}
+                                                <span class="pill tone-green">Promoted</span>
+                                                {% elif promotion.status == 'DETAINED' %}
+                                                <span class="pill tone-amber">Detained</span>
+                                                {% else %}
+                                                <span class="pill tone-blue">Graduated</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ promotion.promoted_on|date:"M d, Y" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="empty">
+                                                <i class="bi bi-inbox"></i>No recent promotions
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Quick Links Grid -->
-    <div class="row g-4">
-        <!-- Quick Actions Card -->
+    <!-- Quick actions, overview, technical -->
+    <div class="row g-3 g-lg-4">
+
+        <!-- Quick Actions -->
         <div class="col-lg-4">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-lightning-charge-fill me-2"></i>
-                    Quick Actions
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-lightning-charge-fill"></i>Quick actions</div>
+                <div class="panel-body" style="padding:12px">
+                    <ul class="action-list">
+                        <li class="action-row">
+                            <a href="{% url 'students:student_list' %}" class="action-link">
+                                <span class="stat-icon tone-blue"><i class="bi bi-people"></i></span>
+                                Manage Students
+                            </a>
+                            {% if user.is_admin or user.is_staff %}
+                            <a href="{% url 'students:student_create' %}" class="add-chip"><i class="bi bi-plus-lg"></i>Add</a>
+                            {% endif %}
+                        </li>
+                        <li class="action-row">
+                            <a href="{% url 'teachers:teacher_list' %}" class="action-link">
+                                <span class="stat-icon tone-green"><i class="bi bi-person-badge"></i></span>
+                                Manage Teachers
+                            </a>
+                            {% if user.is_admin or user.is_staff %}
+                            <a href="{% url 'teachers:teacher_create' %}" class="add-chip"><i class="bi bi-plus-lg"></i>Add</a>
+                            {% endif %}
+                        </li>
+                        <li class="action-row">
+                            <a href="{% url 'classes:class_list' %}" class="action-link">
+                                <span class="stat-icon tone-violet"><i class="bi bi-door-open"></i></span>
+                                Manage Classes
+                            </a>
+                            {% if user.is_admin or user.is_staff %}
+                            <a href="{% url 'classes:class_create' %}" class="add-chip"><i class="bi bi-plus-lg"></i>Add</a>
+                            {% endif %}
+                        </li>
+                        <li class="action-row">
+                            <a href="{% url 'accounts:user_list' %}" class="action-link">
+                                <span class="stat-icon tone-slate"><i class="bi bi-person-gear"></i></span>
+                                Manage Users
+                            </a>
+                            {% if user.is_admin %}
+                            <a href="{% url 'accounts:user_create' %}" class="add-chip"><i class="bi bi-plus-lg"></i>Add</a>
+                            {% endif %}
+                        </li>
+                        <li class="action-row">
+                            <a href="{% url 'exams:exam_list' %}" class="action-link">
+                                <span class="stat-icon tone-amber"><i class="bi bi-clipboard-data"></i></span>
+                                Manage Exams
+                                <i class="bi bi-chevron-right chev"></i>
+                            </a>
+                        </li>
+                        <li class="action-row">
+                            <a href="{% url 'attendance:attendance_home' %}" class="action-link">
+                                <span class="stat-icon tone-red"><i class="bi bi-calendar-check"></i></span>
+                                Mark Attendance
+                                <i class="bi bi-chevron-right chev"></i>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="card-body">
-                    <a href="{% url 'students:student_list' %}" class="btn btn-gradient-primary w-100 quick-action-btn">
-                        <i class="bi bi-people"></i>
-                        Manage Students
-                    </a>
-                    {% if user.is_admin or user.is_staff %}
-                    <a href="{% url 'students:student_create' %}" class="btn btn-outline-primary w-100 quick-action-btn mb-2">
-                        <i class="bi bi-plus-circle"></i>
-                        Add New Student
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'teachers:teacher_list' %}" class="btn btn-gradient-success w-100 quick-action-btn">
-                        <i class="bi bi-person-badge"></i>
-                        Manage Teachers
-                    </a>
-                    {% if user.is_admin or user.is_staff %}
-                    <a href="{% url 'teachers:teacher_create' %}" class="btn btn-outline-success w-100 quick-action-btn mb-2">
-                        <i class="bi bi-plus-circle"></i>
-                        Add New Teacher
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'classes:class_list' %}" class="btn btn-gradient-info w-100 quick-action-btn">
-                        <i class="bi bi-door-open"></i>
-                        Manage Classes
-                    </a>
-                    {% if user.is_admin or user.is_staff %}
-                    <a href="{% url 'classes:class_create' %}" class="btn btn-outline-info w-100 quick-action-btn mb-2">
-                        <i class="bi bi-plus-circle"></i>
-                        Add New Class
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'accounts:user_list' %}" class="btn btn-gradient-dark w-100 quick-action-btn">
-                        <i class="bi bi-people"></i>
-                        Manage Users
-                    </a>
-                    {% if user.is_admin %}
-                    <a href="{% url 'accounts:user_create' %}" class="btn btn-outline-dark w-100 quick-action-btn mb-2">
-                        <i class="bi bi-plus-circle"></i>
-                        Add New User
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'exams:exam_list' %}" class="btn btn-gradient-warning w-100 quick-action-btn">
-                        <i class="bi bi-clipboard-data"></i>
-                        Manage Exams
-                    </a>
-                    <a href="{% url 'attendance:attendance_home' %}" class="btn btn-gradient-danger w-100 quick-action-btn">
-                        <i class="bi bi-calendar-check"></i>
-                        Mark Attendance
-                    </a>
-                </div>
-            </div>
+            </section>
         </div>
 
-        <!-- System Overview Card -->
+        <!-- System Overview -->
         <div class="col-lg-4">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-bar-chart-fill me-2"></i>
-                    System Overview
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <span><i class="bi bi-people text-primary me-2"></i>Total Parents</span>
-                        <strong>{{ total_parents|default:0|intcomma }}</strong>
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-bar-chart-fill"></i>System overview</div>
+                <div class="panel-body">
+                    <div class="kv">
+                        <span class="kv-label"><span class="stat-icon tone-blue"><i class="bi bi-people"></i></span>Total Parents</span>
+                        <span class="kv-value">{{ total_parents|default:0|intcomma }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <span><i class="bi bi-person-workspace text-success me-2"></i>Staff Members</span>
-                        <strong>{{ total_staff|default:0|intcomma }}</strong>
+                    <div class="kv">
+                        <span class="kv-label"><span class="stat-icon tone-green"><i class="bi bi-person-workspace"></i></span>Staff Members</span>
+                        <span class="kv-value">{{ total_staff|default:0|intcomma }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <span><i class="bi bi-person-circle text-info me-2"></i>Total Users</span>
-                        <strong>{{ total_users|default:0|intcomma }}</strong>
+                    <div class="kv">
+                        <span class="kv-label"><span class="stat-icon tone-violet"><i class="bi bi-person-circle"></i></span>Total Users</span>
+                        <span class="kv-value">{{ total_users|default:0|intcomma }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <span><i class="bi bi-bell text-warning me-2"></i>Notifications</span>
-                        <strong>{{ unread_notifications|default:0 }}</strong>
+                    <div class="kv">
+                        <span class="kv-label"><span class="stat-icon tone-amber"><i class="bi bi-bell"></i></span>Notifications</span>
+                        <span class="kv-value">{{ unread_notifications|default:0 }}</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-check-circle text-success me-2"></i>Marked Today</span>
-                        <strong>{{ total_marked_today|default:0|intcomma }}</strong>
+                    <div class="kv">
+                        <span class="kv-label"><span class="stat-icon tone-green"><i class="bi bi-check-circle"></i></span>Marked Today</span>
+                        <span class="kv-value">{{ total_marked_today|default:0|intcomma }}</span>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
 
-        <!-- Admin Panel Link - Technical Use Only -->
+        <!-- Technical Administration -->
         {% if user.role == 'ADMIN' and user.is_superuser %}
         <div class="col-lg-4">
-            <div class="content-card border-warning">
-                <div class="card-header bg-warning bg-opacity-10">
-                    <i class="bi bi-gear-fill me-2"></i>
-                    Technical Administration
-                </div>
-                <div class="card-body">
-                    <div class="text-center py-3">
-                        <i class="bi bi-shield-lock fs-1 text-warning mb-3"></i>
-                        <h5>Django Admin Panel</h5>
-                        <p class="text-muted">
-                            <small>⚠️ For Technical Administrators & Developers Only</small>
-                        </p>
-                        <p class="text-muted small">
-                            Advanced database management interface. 
-                            Regular operations should be done through this dashboard.
-                        </p>
-                        <button class="btn btn-outline-warning" onclick="confirmAdminAccess()">
-                            <i class="bi bi-shield-lock me-2"></i>
-                            Access Technical Panel
-                        </button>
+            <section class="panel tech-card">
+                <div class="panel-head"><i class="bi bi-gear-fill"></i>Technical administration</div>
+                <div class="panel-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="stat-icon tone-amber"><i class="bi bi-shield-lock"></i></span>
+                        <div>
+                            <div class="fw-semibold">Django Admin Panel</div>
+                            <div class="text-muted" style="font-size:.8rem">Technical administrators only</div>
+                        </div>
                     </div>
+                    <p class="tech-note mb-4">
+                        Advanced database management interface. Regular operations should be done through this dashboard.
+                    </p>
+                    <button type="button" class="btn-ghost btn-full" data-bs-toggle="modal" data-bs-target="#adminAccessModal">
+                        <i class="bi bi-shield-lock"></i>Access technical panel
+                    </button>
                 </div>
-            </div>
+            </section>
         </div>
         {% endif %}
     </div>
 
+    {% if user.role == 'ADMIN' and user.is_superuser %}
+    <!-- Admin access confirmation -->
+    <div class="modal fade" id="adminAccessModal" tabindex="-1" aria-labelledby="adminAccessTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:14px; border:1px solid var(--line)">
+                <div class="modal-header" style="border-bottom:1px solid var(--line-soft)">
+                    <h5 class="modal-title fs-6 fw-semibold" id="adminAccessTitle">Technical admin access</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="font-size:.9rem; color:var(--ink-soft)">
+                    <p>You are about to open the Django Admin Panel, which allows direct database changes.</p>
+                    <ul class="mb-0 ps-3">
+                        <li>You will be asked to re-enter your credentials.</li>
+                        <li>Only continue if you are a technical administrator.</li>
+                        <li>All actions are logged and auditable.</li>
+                        <li>Unauthorized access is prohibited.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--line-soft)">
+                    <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{% url 'accounts:admin_access' %}" class="btn-solid">Continue</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 {% elif user.is_teacher %}
-    <!-- Teacher Dashboard -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card primary">
-                <div class="stat-icon"><i class="bi bi-door-open"></i></div>
-                <div class="stat-label">My Classes</div>
+
+    <!-- Teacher dashboard -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-blue">
+                <div class="stat-top"><span class="stat-label">My Classes</span><span class="stat-icon"><i class="bi bi-door-open"></i></span></div>
                 <div class="stat-value">{{ classes_assigned|length|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card success">
-                <div class="stat-icon"><i class="bi bi-people"></i></div>
-                <div class="stat-label">Total Students</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-green">
+                <div class="stat-top"><span class="stat-label">Total Students</span><span class="stat-icon"><i class="bi bi-people"></i></span></div>
                 <div class="stat-value">{{ total_students|default:0|intcomma }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card info">
-                <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
-                <div class="stat-label">My Subjects</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-violet">
+                <div class="stat-top"><span class="stat-label">My Subjects</span><span class="stat-icon"><i class="bi bi-journal-text"></i></span></div>
                 <div class="stat-value">{{ subjects|length|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card warning">
-                <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
-                <div class="stat-label">Attendance Marked</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-amber">
+                <div class="stat-top"><span class="stat-label">Attendance Marked</span><span class="stat-icon"><i class="bi bi-calendar-check"></i></span></div>
                 <div class="stat-value">{{ attendance_marked_today|default:0 }}</div>
             </div>
         </div>
     </div>
-    <div class="row g-4">
-        <div class="col-md-8">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-book-half me-2"></i>
-                    My Classes
-                </div>
-                <div class="card-body">
+
+    <div class="row g-3 g-lg-4">
+        <div class="col-lg-8">
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-book-half"></i>My classes</div>
+                <div class="panel-body">
                     {% if classes_assigned %}
                         <div class="row g-3">
                             {% for class_room in classes_assigned %}
                             <div class="col-md-6">
-                                <div class="p-3 border rounded-3" style="border-left: 4px solid #667eea !important;">
-                                    <h5 class="mb-2">{{ class_room.name }}</h5>
-                                    <p class="text-muted mb-2">
-                                        <i class="bi bi-people me-1"></i>
-                                        {{ class_room.students.count|intcomma }} Students
-                                    </p>
-                                    <a href="{% url 'classes:class_detail' class_room.pk %}" class="btn btn-sm btn-gradient-primary">
-                                        View Details
-                                    </a>
+                                <div class="item-card">
+                                    <h5>{{ class_room.name }}</h5>
+                                    <div class="item-meta"><i class="bi bi-people"></i>{{ class_room.students.count|intcomma }} students</div>
+                                    <a href="{% url 'classes:class_detail' class_room.pk %}" class="btn-ghost">View details<i class="bi bi-arrow-right"></i></a>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                            <p>No classes assigned yet.</p>
-                        </div>
+                        <div class="empty"><i class="bi bi-inbox"></i>No classes assigned yet.</div>
                     {% endif %}
                 </div>
-            </div>
+            </section>
         </div>
-        <div class="col-md-4">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-journal-text me-2"></i>
-                    My Subjects
-                </div>
-                <div class="card-body">
+        <div class="col-lg-4">
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-journal-text"></i>My subjects</div>
+                <div class="panel-body">
                     {% if subjects %}
-                        <div class="list-group list-group-flush">
-                            {% for subject in subjects %}
-                            <div class="list-group-item border-0 px-0">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                {{ subject.name }} <span class="text-muted">({{ subject.code }})</span>
-                            </div>
-                            {% endfor %}
+                        {% for subject in subjects %}
+                        <div class="subject-row">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>{{ subject.name }}</span>
+                            <span class="code">{{ subject.code }}</span>
                         </div>
+                        {% endfor %}
                     {% else %}
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            <p class="mb-0">No subjects assigned.</p>
-                        </div>
+                        <div class="empty"><i class="bi bi-inbox"></i>No subjects assigned.</div>
                     {% endif %}
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
 {% elif user.is_student %}
-    <!-- Student Dashboard -->
-    <div class="row g-4">
+
+    <!-- Student dashboard -->
+    <div class="row g-3 g-lg-4">
         <div class="col-md-6">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-person-circle me-2"></i>
-                    My Profile
-                </div>
-                <div class="card-body">
-                    <div class="mb-3 pb-3 border-bottom">
-                        <div class="text-muted small mb-1">Admission Number</div>
-                        <div class="fw-bold">{{ student.admission_number|intcomma }}</div>
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-person-circle"></i>My profile</div>
+                <div class="panel-body">
+                    <div class="field-block">
+                        <div class="k">Admission number</div>
+                        <div class="v num">{{ student.admission_number|intcomma }}</div>
                     </div>
-                    <div class="mb-3 pb-3 border-bottom">
-                        <div class="text-muted small mb-1">Class</div>
-                        <div class="fw-bold">{{ student.class_assigned.name }}</div>
+                    <div class="field-block">
+                        <div class="k">Class</div>
+                        <div class="v">{{ student.class_assigned.name }}</div>
                     </div>
-                    <div>
-                        <div class="text-muted small mb-1">Roll Number</div>
-                        <div class="fw-bold">{{ student.roll_number|intcomma|default:"Not Assigned" }}</div>
+                    <div class="field-block">
+                        <div class="k">Roll number</div>
+                        <div class="v num">{{ student.roll_number|intcomma|default:"Not Assigned" }}</div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-        
+
         <div class="col-md-6">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-graph-up me-2"></i>
-                    Recent Results
-                </div>
-                <div class="card-body">
+            <section class="panel">
+                <div class="panel-head"><i class="bi bi-graph-up"></i>Recent results</div>
+                <div class="panel-body">
                     {% if recent_results %}
-                        <div class="list-group list-group-flush">
-                            {% for result in recent_results %}
-                            <div class="list-group-item border-0 px-0 d-flex justify-content-between align-items-center">
-                                <span>{{ result.subject.name }}</span>
-                                <span class="badge-modern bg-primary">
-                                    {{ result.marks }}/{{ result.subject.pass_mark|default:100 }}
-                                </span>
-                            </div>
-                            {% endfor %}
+                        {% for result in recent_results %}
+                        <div class="kv">
+                            <span class="kv-label">{{ result.subject.name }}</span>
+                            <span class="pill tone-blue num">{{ result.marks }}/{{ result.subject.pass_mark|default:100 }}</span>
                         </div>
+                        {% endfor %}
                     {% else %}
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            <p class="mb-0">No results available.</p>
-                        </div>
+                        <div class="empty"><i class="bi bi-inbox"></i>No results available.</div>
                     {% endif %}
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
 {% elif user.is_parent %}
-    <!-- Parent Dashboard -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card primary">
-                <div class="stat-icon"><i class="bi bi-people"></i></div>
-                <div class="stat-label">My Children</div>
+
+    <!-- Parent dashboard -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-blue">
+                <div class="stat-top"><span class="stat-label">My Children</span><span class="stat-icon"><i class="bi bi-people"></i></span></div>
                 <div class="stat-value">{{ children|length|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card info">
-                <div class="stat-icon"><i class="bi bi-bar-chart"></i></div>
-                <div class="stat-label">Average Performance</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-violet">
+                <div class="stat-top"><span class="stat-label">Average Performance</span><span class="stat-icon"><i class="bi bi-bar-chart"></i></span></div>
                 <div class="stat-value">{{ average_performance|default:"-" }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card warning">
-                <div class="stat-icon"><i class="bi bi-bell"></i></div>
-                <div class="stat-label">Notifications</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-amber">
+                <div class="stat-top"><span class="stat-label">Notifications</span><span class="stat-icon"><i class="bi bi-bell"></i></span></div>
                 <div class="stat-value">{{ unread_notifications|default:0 }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card success">
-                <div class="stat-icon"><i class="bi bi-calendar-check"></i></div>
-                <div class="stat-label">Attendance This Term</div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat tone-green">
+                <div class="stat-top"><span class="stat-label">Attendance This Term</span><span class="stat-icon"><i class="bi bi-calendar-check"></i></span></div>
                 <div class="stat-value">{{ attendance_this_term|default:"-" }}</div>
             </div>
         </div>
     </div>
-    <div class="row g-4">
-        <div class="col-md-12">
-            <div class="content-card">
-                <div class="card-header">
-                    <i class="bi bi-people-fill me-2"></i>
-                    My Children
-                </div>
-                <div class="card-body">
-                    {% if children %}
-                        <div class="row g-4">
-                            {% for child in children %}
-                            <div class="col-md-4">
-                                <div class="stat-card primary">
-                                    <div class="stat-icon">
-                                        <i class="bi bi-person-circle"></i>
-                                    </div>
-                                    <h5 class="mb-3">{{ child.user.get_full_name }}</h5>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Admission No:</small>
-                                        <div class="fw-bold">{{ child.admission_number|intcomma }}</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <small class="text-muted">Class:</small>
-                                        <div class="fw-bold">{{ child.class_assigned.name }}</div>
-                                    </div>
-                                    <a href="{% url 'students:student_detail' child.pk %}" class="btn btn-sm btn-gradient-primary w-100">
-                                        View Details
-                                    </a>
-                                </div>
+
+    <section class="panel" style="height:auto">
+        <div class="panel-head"><i class="bi bi-people-fill"></i>My children</div>
+        <div class="panel-body">
+            {% if children %}
+                <div class="row g-3">
+                    {% for child in children %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="item-card tone-blue">
+                            <div class="avatar"><i class="bi bi-person-circle"></i></div>
+                            <h5>{{ child.user.get_full_name }}</h5>
+                            <div class="field-block" style="padding-top:12px">
+                                <div class="k">Admission no.</div>
+                                <div class="v num">{{ child.admission_number|intcomma }}</div>
                             </div>
-                            {% endfor %}
+                            <div class="field-block">
+                                <div class="k">Class</div>
+                                <div class="v">{{ child.class_assigned.name }}</div>
+                            </div>
+                            <a href="{% url 'students:student_detail' child.pk %}" class="btn-ghost btn-full mt-3">View details<i class="bi bi-arrow-right"></i></a>
                         </div>
-                    {% else %}
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                            <p>No children linked to your account.</p>
-                        </div>
-                    {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
-            </div>
+            {% else %}
+                <div class="empty"><i class="bi bi-inbox"></i>No children linked to your account.</div>
+            {% endif %}
         </div>
-    </div>
+    </section>
+
 {% endif %}
 
-<script>
-function confirmAdminAccess() {
-    // Security confirmation modal
-    const confirmation = confirm(
-        "⚠️ TECHNICAL ADMIN ACCESS\n\n" +
-        "You are about to access the Django Admin Panel.\n" +
-        "This interface allows direct database modifications.\n\n" +
-        "• You will be required to re-enter your credentials\n" +
-        "• Only proceed if you are a technical administrator\n" +
-        "• All actions are logged and auditable\n" +
-        "• Unauthorized access is prohibited\n\n" +
-        "Do you want to continue?"
-    );
-    
-    if (confirmation) {
-        // Redirect to admin access authentication page
-        window.location.href = "{% url 'accounts:admin_access' %}";
-    }
-}
-</script>
-
+</div>
 {% endblock %}

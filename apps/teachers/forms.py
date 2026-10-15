@@ -3,6 +3,7 @@ Forms for Teacher Management
 """
 from django import forms
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from .models import Teacher
 from apps.classes.models import Subject
 
@@ -11,7 +12,7 @@ User = get_user_model()
 
 class TeacherForm(forms.ModelForm):
     """Form for creating and updating teacher records"""
-    
+
     # User fields
     username = forms.CharField(
         max_length=150,
@@ -70,8 +71,8 @@ class TeacherForm(forms.ModelForm):
             'accept': 'image/*'
         })
     )
-    
-    # Password fields (only for create)
+
+    # Password fields (required only when creating)
     password = forms.CharField(
         required=False,
         widget=forms.PasswordInput(attrs={
@@ -87,7 +88,7 @@ class TeacherForm(forms.ModelForm):
             'placeholder': 'Confirm password'
         })
     )
-    
+
     class Meta:
         model = Teacher
         fields = [
@@ -151,14 +152,15 @@ class TeacherForm(forms.ModelForm):
                 'class': 'form-check-input'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         self.instance_pk = kwargs.get('instance').pk if kwargs.get('instance') else None
         super().__init__(*args, **kwargs)
-        
+
         # Populate user fields if editing
         if self.instance and self.instance.pk:
             user = self.instance.user
+            self.fields['username'].initial = user.username
             self.fields['first_name'].initial = user.first_name
             self.fields['last_name'].initial = user.last_name
             self.fields['email'].initial = user.email
@@ -171,92 +173,115 @@ class TeacherForm(forms.ModelForm):
             # Password required for new teachers
             self.fields['password'].required = True
             self.fields['password_confirm'].required = True
-        
+
         # Filter active subjects
         self.fields['subjects'].queryset = Subject.objects.filter(is_active=True)
-    
+
+    # ------------------------------------------------------------------
+    # Field validation
+    # ------------------------------------------------------------------
+    def _current_user_id(self):
+        """The user attached to the teacher being edited, or None when creating."""
+        if self.instance_pk:
+            return self.instance.user_id
+        return None
+
+    def clean_username(self):
+        username = (self.cleaned_data.get('username') or '').strip()
+        existing = User.objects.filter(username__iexact=username)
+        if self._current_user_id():
+            existing = existing.exclude(pk=self._current_user_id())
+        if existing.exists():
+            raise forms.ValidationError('This username is already taken.')
+        return username
+
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = (self.cleaned_data.get('email') or '').strip()
         if email:
-            # Check if email exists for another user
-            existing_user = User.objects.filter(email=email).exclude(
-                teacher_profile__pk=self.instance_pk
-            ).first()
-            if existing_user:
+            existing = User.objects.filter(email__iexact=email)
+            if self._current_user_id():
+                existing = existing.exclude(pk=self._current_user_id())
+            if existing.exists():
                 raise forms.ValidationError('A user with this email already exists.')
         return email
-    
+
     def clean_employee_id(self):
-        employee_id = self.cleaned_data.get('employee_id')
+        employee_id = (self.cleaned_data.get('employee_id') or '').strip()
         if employee_id:
-            subjects = forms.ModelChoiceField(queryset=Subject.objects.filter(is_active=True), required=False, widget=forms.Select(attrs={'class': 'form-select'}))
-            if existing_teacher:
+            existing_teacher = Teacher.objects.filter(employee_id__iexact=employee_id)
+            if self.instance_pk:
+                existing_teacher = existing_teacher.exclude(pk=self.instance_pk)
+            if existing_teacher.exists():
                 raise forms.ValidationError('A teacher with this employee ID already exists.')
         return employee_id
-    
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
-        
+
         # Validate password match
         if password or password_confirm:
             if password != password_confirm:
-                raise forms.ValidationError('Passwords do not match.')
-        
+                self.add_error('password_confirm', 'Passwords do not match.')
+
         # Validate password for new users
         if not self.instance_pk and not password:
-            raise forms.ValidationError('Password is required for new teachers.')
-        
+            self.add_error('password', 'Password is required for new teachers.')
+
         return cleaned_data
-    
+
+    # ------------------------------------------------------------------
+    # Save
+    # ------------------------------------------------------------------
     def save(self, commit=True):
-        teacher = super().save(commit=False)
-        
-        # Create or update user
-        if not teacher.pk:
-            # Creating new teacher
-            user = User.objects.create_user(
-                username=self.cleaned_data['email'].split('@')[0],
-                email=self.cleaned_data['email'],
-                first_name=self.cleaned_data['first_name'],
-                last_name=self.cleaned_data['last_name'],
-                password=self.cleaned_data['password'],
-                role='TEACHER',
-                phone_number=self.cleaned_data.get('phone_number', ''),
-                address=self.cleaned_data.get('address', ''),
-                date_of_birth=self.cleaned_data.get('date_of_birth'),
-            )
-            
-            # Handle profile picture
-            if self.cleaned_data.get('profile_picture'):
-                user.profile_picture = self.cleaned_data['profile_picture']
+        with transaction.atomic():
+            teacher = super().save(commit=False)
+
+            if not teacher.pk:
+                # Creating new teacher
+                user = User.objects.create_user(
+                    username=self.cleaned_data['username'],
+                    email=self.cleaned_data['email'],
+                    first_name=self.cleaned_data['first_name'],
+                    last_name=self.cleaned_data['last_name'],
+                    password=self.cleaned_data['password'],
+                    role='TEACHER',
+                    phone_number=self.cleaned_data.get('phone_number', ''),
+                    address=self.cleaned_data.get('address', ''),
+                    date_of_birth=self.cleaned_data.get('date_of_birth'),
+                )
+
+                # Handle profile picture
+                if self.cleaned_data.get('profile_picture'):
+                    user.profile_picture = self.cleaned_data['profile_picture']
+                    user.save()
+
+                teacher.user = user
+            else:
+                # Updating existing teacher
+                user = teacher.user
+                user.username = self.cleaned_data['username']
+                user.first_name = self.cleaned_data['first_name']
+                user.last_name = self.cleaned_data['last_name']
+                user.email = self.cleaned_data['email']
+                user.phone_number = self.cleaned_data.get('phone_number', '')
+                user.address = self.cleaned_data.get('address', '')
+                user.date_of_birth = self.cleaned_data.get('date_of_birth')
+
+                # Update password if provided
+                if self.cleaned_data.get('password'):
+                    user.set_password(self.cleaned_data['password'])
+
+                # Handle profile picture
+                if self.cleaned_data.get('profile_picture'):
+                    user.profile_picture = self.cleaned_data['profile_picture']
+
                 user.save()
-            
-            teacher.user = user
-        else:
-            # Updating existing teacher
-            user = teacher.user
-            user.first_name = self.cleaned_data['first_name']
-            user.last_name = self.cleaned_data['last_name']
-            user.email = self.cleaned_data['email']
-            user.phone_number = self.cleaned_data.get('phone_number', '')
-            user.address = self.cleaned_data.get('address', '')
-            user.date_of_birth = self.cleaned_data.get('date_of_birth')
-            
-            # Update password if provided
-            if self.cleaned_data.get('password'):
-                user.set_password(self.cleaned_data['password'])
-            
-            # Handle profile picture
-            if self.cleaned_data.get('profile_picture'):
-                user.profile_picture = self.cleaned_data['profile_picture']
-            
-            user.save()
-        
-        if commit:
-            teacher.save()
-            # Save many-to-many relationships
-            self.save_m2m()
-        
+
+            if commit:
+                teacher.save()
+                # Save many-to-many relationships
+                self.save_m2m()
+
         return teacher

@@ -3,42 +3,139 @@
 
 {% block title %}Parents List - SMS{% endblock %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Scoped to .par so nothing leaks into the base layout */
+    .par {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .par .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+    .par .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .par .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+
+    .par .btn-solid {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px;
+        font-size: .85rem; font-weight: 600; color: #fff; background: var(--brand); border: 1px solid var(--brand);
+        border-radius: 10px; text-decoration: none; cursor: pointer; white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.12);
+        transition: background .15s, border-color .15s, box-shadow .15s;
+    }
+    .par .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .par .btn-solid:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+
+    .par .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(15, 23, 42, .04); overflow: hidden; }
+
+    /* Toolbar */
+    .par .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .par .toolbar .search { position: relative; flex: 1 1 260px; min-width: 0; }
+    .par .toolbar .search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; transition: color .15s; }
+    .par .toolbar .search:focus-within i { color: var(--brand); }
+    .par .form-control {
+        min-height: 40px; padding-left: 40px; font-size: .875rem; color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04); transition: border-color .15s, box-shadow .15s;
+    }
+    .par .form-control::placeholder { color: #a8b3c4; }
+    .par .form-control:hover { border-color: #cbd5e1; }
+    .par .form-control:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+    .par .clear-link { font-size: .85rem; font-weight: 500; color: var(--muted); text-decoration: none; padding: 8px 6px; }
+    .par .clear-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Table */
+    .par .table-clean { width: 100%; margin: 0; font-size: .875rem; --bs-table-bg: transparent; }
+    .par .table-clean thead th {
+        padding: 11px 16px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--muted); background: var(--canvas); border-bottom: 1px solid var(--line); white-space: nowrap;
+    }
+    .par .table-clean tbody td { padding: 13px 16px; vertical-align: middle; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
+    .par .table-clean tbody tr:last-child td { border-bottom: 0; }
+    .par .table-clean tbody tr:hover td { background: var(--canvas); }
+
+    .par .person { display: flex; align-items: center; gap: 12px; min-width: 190px; }
+    .par .avatar {
+        width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center; overflow: hidden;
+        font-size: .72rem; font-weight: 600; background: var(--brand-50); color: var(--brand); border: 1px solid #dbeafe;
+    }
+    .par .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .par .person .name { font-weight: 600; line-height: 1.3; }
+    .par .muted { color: var(--muted); }
+
+    .par .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: .75rem; font-weight: 600;
+        border-radius: 999px; line-height: 1.5; background: var(--brand-50); color: var(--brand); white-space: nowrap;
+    }
+    .par .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+
+    .par .row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .par .icon-btn {
+        width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--line);
+        background: #fff; color: var(--ink-soft); font-size: .9rem; text-decoration: none; transition: background .15s, color .15s, border-color .15s;
+    }
+    .par .icon-btn:hover { background: var(--brand-50); border-color: #bfdbfe; color: var(--brand); }
+    .par .icon-btn:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+    .par .table-foot { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--canvas); font-size: .82rem; color: var(--muted); }
+
+    .par .empty { text-align: center; padding: 56px 20px; }
+    .par .empty .ring { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 14px; display: grid; place-items: center; background: var(--canvas); color: var(--faint); font-size: 1.5rem; border: 1px solid var(--line); }
+    .par .empty h4 { font-size: 1.05rem; font-weight: 600; margin: 0 0 6px; }
+    .par .empty p { color: var(--muted); font-size: .9rem; margin: 0 0 20px; }
+
+    @media (max-width: 767.98px) { .par .page-head h1 { font-size: 1.4rem; } }
+    @media (prefers-reduced-motion: reduce) { .par * { transition: none !important; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="bi bi-people"></i> Parents Management
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
+<div class="par container-fluid py-4">
+
+    <header class="page-head">
+        <div>
+            <h1>Parents management</h1>
+            <p>Manage parent and guardian records and their linked children.</p>
+        </div>
         {% if user.is_admin or user.is_staff %}
-        <a href="{% url 'parents:parent_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Add Parent
+        <a href="{% url 'parents:parent_create' %}" class="btn-solid">
+            <i class="bi bi-plus-lg"></i> Add Parent
         </a>
         {% endif %}
-    </div>
-</div>
+    </header>
 
-<!-- Search Bar -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-10">
-                <input type="text" name="q" class="form-control" placeholder="Search by name, phone, or email" value="{{ query }}">
+    <section class="panel">
+
+        <!-- Search -->
+        <form method="get" class="toolbar" role="search">
+            <div class="search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="form-control" placeholder="Search by name, phone, or email"
+                       aria-label="Search by name, phone, or email" value="{{ query }}">
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search"></i> Search
-                </button>
-            </div>
+            <button type="submit" class="btn-solid">
+                <i class="bi bi-search"></i> Search
+            </button>
+            {% if query %}<a href="?" class="clear-link">Clear</a>{% endif %}
         </form>
-    </div>
-</div>
 
-<!-- Parents Table -->
-<div class="card">
-    <div class="card-body">
         {% if parents %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-clean">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -47,39 +144,36 @@
                         <th>Email</th>
                         <th>Occupation</th>
                         <th>Children</th>
-                        <th>Actions</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for parent in parents %}
                     <tr>
                         <td>
-                            <div class="d-flex align-items-center">
-                                {% if parent.user.profile_picture %}
-                                <img src="{{ parent.user.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32" alt="{{ parent.user.get_full_name }}">
-                                {% else %}
-                                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                    {{ parent.user.first_name.0 }}{{ parent.user.last_name.0 }}
-                                </div>
-                                {% endif %}
-                                <span>{{ parent.user.get_full_name }}</span>
+                            <div class="person">
+                                <span class="avatar">
+                                    {% if parent.user.profile_picture %}
+                                    <img src="{{ parent.user.profile_picture.url }}" alt="{{ parent.user.get_full_name }}">
+                                    {% else %}
+                                    <span aria-hidden="true">{{ parent.user.first_name.0|upper }}{{ parent.user.last_name.0|upper }}</span>
+                                    {% endif %}
+                                </span>
+                                <span class="name">{{ parent.user.get_full_name }}</span>
                             </div>
                         </td>
                         <td>{{ parent.relationship|default:"Guardian" }}</td>
-                        <td>{{ parent.user.phone_number|default:"N/A" }}</td>
+                        <td>{% if parent.user.phone_number %}{{ parent.user.phone_number }}{% else %}<span class="muted">N/A</span>{% endif %}</td>
                         <td>{{ parent.user.email }}</td>
-                        <td>{{ parent.occupation|default:"N/A" }}</td>
+                        <td>{% if parent.occupation %}{{ parent.occupation }}{% else %}<span class="muted">N/A</span>{% endif %}</td>
+                        <td><span class="pill">{{ parent.student_set.count }} child(ren)</span></td>
                         <td>
-                            <span class="badge bg-primary">{{ parent.student_set.count }} child(ren)</span>
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{% url 'parents:parent_detail' parent.pk %}" class="btn btn-outline-primary" title="View Details">
+                            <div class="row-actions">
+                                <a href="{% url 'parents:parent_detail' parent.pk %}" class="icon-btn" title="View Details" aria-label="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.is_admin or user.is_staff %}
-                                {% if user.is_admin or user.is_staff %}
-                                <a href="{% url 'parents:parent_update' parent.pk %}" class="btn btn-outline-secondary" title="Edit">
+                                <a href="{% url 'parents:parent_update' parent.pk %}" class="icon-btn" title="Edit" aria-label="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% endif %}
@@ -90,22 +184,20 @@
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination would go here -->
-        <div class="mt-3">
-            <p class="text-muted">Showing {{ parents.count }} parent(s)</p>
-        </div>
+
+        <div class="table-foot">Showing {{ parents.count }} parent(s)</div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted"></i>
-            <p class="text-muted mt-3">No parents found</p>
+        <div class="empty">
+            <div class="ring"><i class="bi bi-inbox"></i></div>
+            <h4>No parents found</h4>
+            <p>{% if query %}Try a different search term.{% else %}Start by adding your first parent to the system.{% endif %}</p>
             {% if user.is_admin or user.is_staff %}
-            <a href="{% url 'parents:parent_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Add First Parent
+            <a href="{% url 'parents:parent_create' %}" class="btn-solid">
+                <i class="bi bi-plus-lg"></i> Add First Parent
             </a>
             {% endif %}
         </div>
         {% endif %}
-    </div>
+    </section>
 </div>
 {% endblock %}

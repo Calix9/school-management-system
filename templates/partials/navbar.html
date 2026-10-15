@@ -1,55 +1,176 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Scoped to .app-nav so nothing leaks into the rest of the layout */
+    .app-nav {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        padding: 0;
+    }
+    .app-nav .container-fluid { min-height: 64px; padding-left: 20px; padding-right: 20px; }
+
+    /* Brand */
+    .app-nav .navbar-brand {
+        display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 0;
+        font-size: 1rem; font-weight: 700; letter-spacing: -.01em; color: var(--ink);
+    }
+    .app-nav .navbar-brand:hover { color: var(--ink); }
+    .app-nav .brand-logo {
+        width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+        background: #0b1b4a; color: #fff; font-size: 1rem;
+    }
+    .app-nav .navbar-brand:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); border-radius: 9px; }
+
+    /* Links */
+    .app-nav .navbar-nav { gap: 2px; align-items: center; }
+    .app-nav .nav-link {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 12px; font-size: .875rem; font-weight: 500; color: var(--ink-soft);
+        border-radius: 8px; transition: background .15s, color .15s;
+    }
+    .app-nav .nav-link i { font-size: 1rem; color: var(--muted); transition: color .15s; }
+    .app-nav .nav-link:hover { background: var(--canvas); color: var(--ink); }
+    .app-nav .nav-link:hover i { color: var(--ink-soft); }
+    .app-nav .nav-link.active { background: var(--brand-50); color: var(--brand); }
+    .app-nav .nav-link.active i { color: var(--brand); }
+    .app-nav .nav-link:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+    /* Unread count */
+    .app-nav .count-pill {
+        min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+        display: inline-grid; place-items: center;
+        font-size: .7rem; font-weight: 700; line-height: 1; color: #fff; background: #dc2626;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Divider between links and account */
+    .app-nav .nav-sep { width: 1px; height: 24px; background: var(--line); margin: 0 10px; }
+
+    /* Account trigger */
+    .app-nav .account-toggle { padding: 5px 10px 5px 6px; border: 1px solid transparent; }
+    .app-nav .account-toggle::after { margin-left: 2px; color: var(--muted); }
+    .app-nav .avatar {
+        width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none;
+        font-size: .78rem; font-weight: 600; color: var(--brand); background: var(--brand-50);
+        border: 1px solid #dbeafe;
+    }
+    .app-nav .account-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+
+    /* Dropdown */
+    .app-nav .dropdown-menu {
+        min-width: 240px; padding: 6px; margin-top: 8px !important;
+        border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, .10);
+        font-size: .875rem;
+    }
+    .app-nav .menu-head { padding: 10px 12px 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
+    .app-nav .menu-head .n { font-weight: 600; color: var(--ink); }
+    .app-nav .menu-head .e { font-size: .8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .app-nav .dropdown-item {
+        display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px;
+        color: var(--ink-soft); font-weight: 500;
+    }
+    .app-nav .dropdown-item i { font-size: 1rem; color: var(--muted); }
+    .app-nav .dropdown-item:hover, .app-nav .dropdown-item:focus { background: var(--canvas); color: var(--ink); }
+    .app-nav .dropdown-item.danger { color: #b91c1c; }
+    .app-nav .dropdown-item.danger i { color: #dc2626; }
+    .app-nav .dropdown-item.danger:hover { background: #fef2f2; color: #991b1b; }
+    .app-nav .dropdown-divider { margin: 6px 0; border-color: #f1f5f9; }
+
+    /* Mobile toggler */
+    .app-nav .navbar-toggler {
+        padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink-soft);
+    }
+    .app-nav .navbar-toggler:focus { box-shadow: 0 0 0 4px var(--ring); }
+    .app-nav .navbar-toggler-icon {
+        width: 1.25em; height: 1.25em;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23475569' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    @media (max-width: 991.98px) {
+        .app-nav .navbar-collapse { padding: 12px 0 16px; border-top: 1px solid #f1f5f9; margin-top: 8px; }
+        .app-nav .navbar-nav { align-items: stretch; gap: 2px; }
+        .app-nav .nav-link { padding: 10px 12px; }
+        .app-nav .nav-sep { width: auto; height: 1px; margin: 8px 0; }
+        .app-nav .account-name { max-width: none; }
+        .app-nav .dropdown-menu { box-shadow: none; margin-top: 4px !important; }
+    }
+    @media (prefers-reduced-motion: reduce) { .app-nav * { transition: none !important; } }
+</style>
+
+<nav class="navbar navbar-expand-lg app-nav" aria-label="Main navigation">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard' %}">
-            <i class="bi bi-mortarboard-fill"></i> School MS
+            <span class="brand-logo"><i class="bi bi-mortarboard-fill"></i></span>
+            School MS
         </a>
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 {% if user.is_teacher or user.is_admin or user.is_staff %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'results:result_list' %}" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 15px; margin-right: 8px;">
-                        <i class="bi bi-table"></i> <strong>View Results</strong>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'result_list' %}active{% endif %}" href="{% url 'results:result_list' %}">
+                        <i class="bi bi-table"></i> View Results
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'exams:exam_list' %}" style="background: rgba(255,255,255,0.1); border-radius: 5px; padding: 8px 15px; margin-right: 10px;">
-                        <i class="bi bi-file-earmark-text-fill"></i> <strong>Report Processing</strong>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'exam_list' %}active{% endif %}" href="{% url 'exams:exam_list' %}">
+                        <i class="bi bi-file-earmark-text"></i> Report Processing
                     </a>
                 </li>
                 {% endif %}
-                
+
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'notifications:notice_board' %}">
-                        <i class="bi bi-megaphone-fill"></i> Announcements
+                    <a class="nav-link {% if request.resolver_match.url_name == 'notice_board' %}active{% endif %}" href="{% url 'notifications:notice_board' %}">
+                        <i class="bi bi-megaphone"></i> Announcements
                     </a>
                 </li>
-                
+
                 {# Dynamic unread alert count for My Alerts #}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'notifications:notifications' %}">
-                        <i class="bi bi-bell-fill"></i> My Alerts
+                    <a class="nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'notifications:notifications' %}">
+                        <i class="bi bi-bell"></i> My Alerts
                         {% if unread_count is not None and unread_count > 0 %}
-                        <span class="badge bg-danger">{{ unread_count }}</span>
+                        <span class="count-pill">{% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}<span class="visually-hidden"> unread</span></span>
                         {% endif %}
                     </a>
                 </li>
-                
+
+                <li class="nav-item d-none d-lg-block" aria-hidden="true"><span class="nav-sep d-block"></span></li>
+                <li class="nav-item d-lg-none" aria-hidden="true"><hr class="nav-sep border-0 m-0"></li>
+
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
+                    <a class="nav-link account-toggle dropdown-toggle" href="#" id="userDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="avatar" aria-hidden="true">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</span>
+                        <span class="account-name">{{ user.get_full_name|default:user.username }}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li class="menu-head">
+                            <div class="n">{{ user.get_full_name|default:user.username }}</div>
+                            {% if user.email %}<div class="e">{{ user.email }}</div>{% endif %}
+                        </li>
                         <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
                             <i class="bi bi-person"></i> Profile
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                        <li><a class="dropdown-item danger" href="{% url 'accounts:logout' %}">
                             <i class="bi bi-box-arrow-right"></i> Logout
                         </a></li>
                     </ul>

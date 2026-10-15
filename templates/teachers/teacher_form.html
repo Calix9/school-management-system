@@ -4,437 +4,372 @@
 {% block title %}{{ title }} - SMS{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    .gradient-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    /* Scoped to .tform so nothing leaks into the base layout.
+       Inputs are styled by type, so this works whatever widget classes forms.py sets. */
+    .tform {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        max-width: 960px; margin: 0 auto;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
     }
-    
-    .form-section {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
+
+    /* Header */
+    .tform .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .tform .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .tform .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; max-width: 60ch; }
+
+    /* Buttons */
+    .tform .btn-solid, .tform .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 18px; font-size: .875rem; font-weight: 600; border-radius: 10px; text-decoration: none; cursor: pointer; white-space: nowrap;
+        transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
     }
-    
-    .form-section:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    .tform .btn-solid { color: #fff; background: var(--brand); border: 1px solid var(--brand); box-shadow: 0 1px 2px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.12); }
+    .tform .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .tform .btn-solid[disabled] { opacity: .75; cursor: progress; }
+    .tform .btn-ghost { color: var(--ink); background: #fff; border: 1px solid var(--line); }
+    .tform .btn-ghost:hover { background: var(--canvas); border-color: #cbd5e1; color: var(--ink); }
+    .tform .btn-solid:focus-visible, .tform .btn-ghost:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .tform .spinner-border { width: 1rem; height: 1rem; border-width: 2px; }
+
+    /* Notices */
+    .tform .notice {
+        display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 20px;
+        font-size: .875rem; border-radius: 10px; border: 1px solid; line-height: 1.5;
     }
-    
-    .section-header {
-        border-bottom: 3px solid #667eea;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        color: #667eea;
-        font-weight: 600;
+    .tform .notice i { margin-top: 2px; }
+    .tform .notice-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .tform .notice-info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+    .tform .notice ul { margin: 0; padding-left: 1rem; }
+    .tform .notice .btn-close { margin-left: auto; padding: 4px; }
+
+    /* Panel + sections */
+    .tform .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+    .tform .panel-section { padding: 24px; }
+    .tform .panel-section + .panel-section { border-top: 1px solid var(--line-soft); }
+    .tform .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .tform .section-head .icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--brand-50); color: var(--brand); font-size: 1rem; flex: none; }
+    .tform .section-head h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .tform .section-head p { margin: 2px 0 0; font-size: .8rem; color: var(--muted); }
+
+    /* Labels and help */
+    .tform .form-label { display: block; font-size: .85rem; font-weight: 500; color: var(--ink); margin-bottom: 7px; }
+    .tform .required-field::after { content: " *"; color: #dc2626; }
+    .tform .help-text { display: block; font-size: .78rem; color: var(--muted); margin-top: 6px; }
+    .tform .field-error { font-size: .8rem; color: #b91c1c; margin-top: 6px; }
+    .tform .field-error ul { list-style: none; margin: 0; padding: 0; }
+    .tform .current-file { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+    .tform .current-file a { color: var(--brand); font-weight: 500; text-decoration: none; }
+    .tform .current-file a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Inputs (by type, independent of widget classes) */
+    .tform input[type="text"], .tform input[type="email"], .tform input[type="tel"], .tform input[type="url"],
+    .tform input[type="number"], .tform input[type="password"], .tform input[type="date"], .tform input[type="file"],
+    .tform select, .tform textarea {
+        display: block; width: 100%; min-height: 44px; padding: 9px 14px;
+        font-family: inherit; font-size: .92rem; color: var(--ink); background-color: #fff;
+        border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+        transition: border-color .15s, box-shadow .15s;
     }
-    
-    .section-icon {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 10px;
+    .tform textarea { min-height: 90px; resize: vertical; }
+    .tform select[multiple] { padding: 6px; min-height: 120px; }
+    .tform select[multiple] option { padding: 6px 8px; border-radius: 6px; }
+    .tform input::placeholder, .tform textarea::placeholder { color: #a8b3c4; }
+    .tform input:hover:not(:disabled):not([type="checkbox"]), .tform select:hover:not(:disabled), .tform textarea:hover:not(:disabled) { border-color: #cbd5e1; }
+    .tform input:focus:not([type="checkbox"]), .tform select:focus, .tform textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+    .tform input:disabled, .tform select:disabled, .tform textarea:disabled { background: var(--canvas); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+    .tform input[type="file"] { padding: 6px; cursor: pointer; }
+    .tform input[type="file"]::file-selector-button {
+        margin-right: 12px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px;
+        background: var(--canvas); color: var(--ink); font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+        transition: background .15s;
     }
-    
-    .btn-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        color: white;
-        padding: 12px 30px;
-        font-weight: 600;
-        transition: all 0.3s;
+    .tform input[type="file"]::file-selector-button:hover { background: var(--line-soft); }
+
+    /* Checkbox */
+    .tform input[type="checkbox"] {
+        width: 18px; height: 18px; margin: 0; flex: none; cursor: pointer; accent-color: var(--brand);
     }
-    
-    .btn-gradient:hover {
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        color: white;
+    .tform input[type="checkbox"]:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .tform .toggle-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--canvas); }
+    .tform .toggle-row label { cursor: pointer; font-size: .9rem; font-weight: 500; margin: 0; }
+    .tform .toggle-row .sub { display: block; font-size: .8rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+    .tform .toggle-row input { margin-top: 2px; }
+
+    /* Action bar */
+    .tform .actions {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 16px 24px; background: var(--canvas); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius);
     }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    @media (max-width: 575.98px) {
+        .tform .panel-section { padding: 20px 16px; }
+        .tform .actions { padding: 14px 16px; }
+        .tform .actions > * { flex: 1; }
     }
-    
-    .required-field::after {
-        content: " *";
-        color: #dc3545;
-    }
-    
-    .alert-error {
-        background-color: #f8d7da;
-        border-color: #f5c6cb;
-        color: #721c24;
-    }
+    @media (prefers-reduced-motion: reduce) { .tform * { transition: none !important; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
-    <h1 class="h2">
-        <i class="bi bi-person-plus-fill"></i> {{ title }}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to List
+<div class="tform py-3">
+
+    <!-- Header -->
+    <header class="page-head">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>
+                {% if is_create %}
+                    Complete all required fields to add a new teacher to the system.
+                {% else %}
+                    Update teacher information. Leave password fields blank to keep the current password.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'teachers:teacher_list' %}" class="btn-ghost">
+            <i class="bi bi-arrow-left"></i> Back to list
         </a>
-    </div>
-</div>
+    </header>
 
-<!-- Header Card -->
-<div class="card gradient-card mb-4">
-    <div class="card-body">
-        <h5 class="mb-1">
-            <i class="bi bi-info-circle"></i> Teacher Information Form
-        </h5>
-        <p class="mb-0 opacity-75">
-            {% if is_create %}
-                Complete all required fields to add a new teacher to the system.
-            {% else %}
-                Update teacher information. Leave password fields blank to keep current password.
-            {% endif %}
-        </p>
+    <!-- Form-level errors -->
+    {% if form.non_field_errors %}
+    <div class="notice notice-danger alert alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle"></i>
+        <div>{{ form.non_field_errors }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
     </div>
-</div>
+    {% endif %}
 
-<!-- Display form errors -->
-{% if form.non_field_errors %}
-<div class="alert alert-error alert-dismissible fade show" role="alert">
-    {{ form.non_field_errors }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endif %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    
-    <!-- Personal Information Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-person-fill"></i>
-            </span>
-            Personal Information
-        </div>
-        
-        <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label required-field">Username</label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="text-danger small">{{ form.username.errors }}</div>
-                            {% endif %}
-                        </div>
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.first_name.id_for_label }}" class="form-label required-field">First Name</label>
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                    <div class="text-danger small">{{ form.first_name.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.last_name.id_for_label }}" class="form-label required-field">Last Name</label>
-                {{ form.last_name }}
-                {% if form.last_name.errors %}
-                    <div class="text-danger small">{{ form.last_name.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.email.id_for_label }}" class="form-label required-field">Email Address</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="text-danger small">{{ form.email.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
-                {{ form.phone_number }}
-                {% if form.phone_number.errors %}
-                    <div class="text-danger small">{{ form.phone_number.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
-                {{ form.date_of_birth }}
-                {% if form.date_of_birth.errors %}
-                    <div class="text-danger small">{{ form.date_of_birth.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
-                {{ form.profile_picture }}
-                {% if form.profile_picture.errors %}
-                    <div class="text-danger small">{{ form.profile_picture.errors }}</div>
-                {% endif %}
-                {% if not is_create and teacher.user.profile_picture %}
-                    <small class="text-muted d-block mt-1">
-                        Current: <a href="{{ teacher.user.profile_picture.url }}" target="_blank">View</a>
-                    </small>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-12 mb-3">
-                <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
-                {{ form.address }}
-                {% if form.address.errors %}
-                    <div class="text-danger small">{{ form.address.errors }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Account Security Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-shield-lock-fill"></i>
-            </span>
-            Account Security
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.password.id_for_label }}" class="form-label {% if is_create %}required-field{% endif %}">
-                    Password
-                </label>
-                {{ form.password }}
-                <small class="form-text text-muted">{{ form.password.help_text }}</small>
-                {% if form.password.errors %}
-                    <div class="text-danger small">{{ form.password.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.password_confirm.id_for_label }}" class="form-label {% if is_create %}required-field{% endif %}">
-                    Confirm Password
-                </label>
-                {{ form.password_confirm }}
-                {% if form.password_confirm.errors %}
-                    <div class="text-danger small">{{ form.password_confirm.errors }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Employment Information Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-briefcase-fill"></i>
-            </span>
-            Employment Information
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.employee_id.id_for_label }}" class="form-label required-field">Employee ID</label>
-                {{ form.employee_id }}
-                {% if form.employee_id.errors %}
-                    <div class="text-danger small">{{ form.employee_id.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.employment_type.id_for_label }}" class="form-label required-field">Employment Type</label>
-                {{ form.employment_type }}
-                {% if form.employment_type.errors %}
-                    <div class="text-danger small">{{ form.employment_type.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.joining_date.id_for_label }}" class="form-label required-field">Date of Joining</label>
-                {{ form.joining_date }}
-                {% if form.joining_date.errors %}
-                    <div class="text-danger small">{{ form.joining_date.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.salary.id_for_label }}" class="form-label">Monthly Salary</label>
-                {{ form.salary }}
-                {% if form.salary.errors %}
-                    <div class="text-danger small">{{ form.salary.errors }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Professional Qualifications Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-award-fill"></i>
-            </span>
-            Professional Qualifications
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.qualification.id_for_label }}" class="form-label required-field">Highest Qualification</label>
-                {{ form.qualification }}
-                {% if form.qualification.errors %}
-                    <div class="text-danger small">{{ form.qualification.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.specialization.id_for_label }}" class="form-label">Specialization</label>
-                {{ form.specialization }}
-                {% if form.specialization.errors %}
-                    <div class="text-danger small">{{ form.specialization.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.experience_years.id_for_label }}" class="form-label">Years of Experience</label>
-                {{ form.experience_years }}
-                {% if form.experience_years.errors %}
-                    <div class="text-danger small">{{ form.experience_years.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.subjects.id_for_label }}" class="form-label">Subjects Teaching</label>
-                {{ form.subjects }}
-                <!-- Removed multiple selection instruction for consistency -->
-                {% if form.subjects.errors %}
-                    <div class="text-danger small">{{ form.subjects.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-12 mb-3">
-                <label for="{{ form.certifications.id_for_label }}" class="form-label">Certifications</label>
-                {{ form.certifications }}
-                {% if form.certifications.errors %}
-                    <div class="text-danger small">{{ form.certifications.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-12 mb-3">
-                <label for="{{ form.bio.id_for_label }}" class="form-label">Biography</label>
-                {{ form.bio }}
-                {% if form.bio.errors %}
-                    <div class="text-danger small">{{ form.bio.errors }}</div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Documents Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-file-earmark-text-fill"></i>
-            </span>
-            Documents
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.resume.id_for_label }}" class="form-label">Resume/CV</label>
-                {{ form.resume }}
-                {% if form.resume.errors %}
-                    <div class="text-danger small">{{ form.resume.errors }}</div>
-                {% endif %}
-                {% if not is_create and teacher.resume %}
-                    <small class="text-muted d-block mt-1">
-                        Current: <a href="{{ teacher.resume.url }}" target="_blank">View Resume</a>
-                    </small>
-                {% endif %}
-            </div>
-            
-            <div class="col-md-6 mb-3">
-                <label for="{{ form.certificates.id_for_label }}" class="form-label">Certificates</label>
-                {{ form.certificates }}
-                {% if form.certificates.errors %}
-                    <div class="text-danger small">{{ form.certificates.errors }}</div>
-                {% endif %}
-                {% if not is_create and teacher.certificates %}
-                    <small class="text-muted d-block mt-1">
-                        Current: <a href="{{ teacher.certificates.url }}" target="_blank">View Certificates</a>
-                    </small>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Status Section -->
-    <div class="form-section">
-        <div class="section-header">
-            <span class="section-icon">
-                <i class="bi bi-toggle-on"></i>
-            </span>
-            Status
-        </div>
-        
-        <div class="row">
-            <div class="col-md-12 mb-3">
-                <div class="form-check">
+        <div class="panel">
+
+            <!-- Personal Information -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-person"></i></span>
+                    <div><h2>Personal information</h2><p>Basic details and contact information.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.username.id_for_label }}" class="form-label required-field">Username</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="field-error">{{ form.username.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label required-field">First name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<div class="field-error">{{ form.first_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label required-field">Last name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<div class="field-error">{{ form.last_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.email.id_for_label }}" class="form-label required-field">Email address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="field-error">{{ form.email.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}<div class="field-error">{{ form.phone_number.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of birth</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}<div class="field-error">{{ form.date_of_birth.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile picture</label>
+                        {{ form.profile_picture }}
+                        {% if form.profile_picture.errors %}<div class="field-error">{{ form.profile_picture.errors }}</div>{% endif %}
+                        {% if not is_create and teacher.user.profile_picture %}
+                        <div class="current-file"><i class="bi bi-paperclip"></i> Current: <a href="{{ teacher.user.profile_picture.url }}" target="_blank" rel="noopener">View</a></div>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}<div class="field-error">{{ form.address.errors }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Account Security -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-shield-lock"></i></span>
+                    <div><h2>Account security</h2><p>Credentials used to sign in.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.password.id_for_label }}" class="form-label {% if is_create %}required-field{% endif %}">Password</label>
+                        {{ form.password }}
+                        {% if form.password.help_text %}<span class="help-text">{{ form.password.help_text }}</span>{% endif %}
+                        {% if form.password.errors %}<div class="field-error">{{ form.password.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.password_confirm.id_for_label }}" class="form-label {% if is_create %}required-field{% endif %}">Confirm password</label>
+                        {{ form.password_confirm }}
+                        {% if form.password_confirm.errors %}<div class="field-error">{{ form.password_confirm.errors }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Employment Information -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-briefcase"></i></span>
+                    <div><h2>Employment information</h2><p>Role and contract details.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.employee_id.id_for_label }}" class="form-label required-field">Employee ID</label>
+                        {{ form.employee_id }}
+                        {% if form.employee_id.errors %}<div class="field-error">{{ form.employee_id.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.employment_type.id_for_label }}" class="form-label required-field">Employment type</label>
+                        {{ form.employment_type }}
+                        {% if form.employment_type.errors %}<div class="field-error">{{ form.employment_type.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.joining_date.id_for_label }}" class="form-label required-field">Date of joining</label>
+                        {{ form.joining_date }}
+                        {% if form.joining_date.errors %}<div class="field-error">{{ form.joining_date.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.salary.id_for_label }}" class="form-label">Monthly salary</label>
+                        {{ form.salary }}
+                        {% if form.salary.errors %}<div class="field-error">{{ form.salary.errors }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Professional Qualifications -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-award"></i></span>
+                    <div><h2>Professional qualifications</h2><p>Education, experience and teaching subjects.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.qualification.id_for_label }}" class="form-label required-field">Highest qualification</label>
+                        {{ form.qualification }}
+                        {% if form.qualification.errors %}<div class="field-error">{{ form.qualification.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.specialization.id_for_label }}" class="form-label">Specialization</label>
+                        {{ form.specialization }}
+                        {% if form.specialization.errors %}<div class="field-error">{{ form.specialization.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.experience_years.id_for_label }}" class="form-label">Years of experience</label>
+                        {{ form.experience_years }}
+                        {% if form.experience_years.errors %}<div class="field-error">{{ form.experience_years.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.subjects.id_for_label }}" class="form-label">Subjects teaching</label>
+                        {{ form.subjects }}
+                        {% if form.subjects.errors %}<div class="field-error">{{ form.subjects.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.certifications.id_for_label }}" class="form-label">Certifications</label>
+                        {{ form.certifications }}
+                        {% if form.certifications.errors %}<div class="field-error">{{ form.certifications.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">Biography</label>
+                        {{ form.bio }}
+                        {% if form.bio.errors %}<div class="field-error">{{ form.bio.errors }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-file-earmark-text"></i></span>
+                    <div><h2>Documents</h2><p>Supporting files for the teacher's record.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.resume.id_for_label }}" class="form-label">Resume / CV</label>
+                        {{ form.resume }}
+                        {% if form.resume.errors %}<div class="field-error">{{ form.resume.errors }}</div>{% endif %}
+                        {% if not is_create and teacher.resume %}
+                        <div class="current-file"><i class="bi bi-paperclip"></i> Current: <a href="{{ teacher.resume.url }}" target="_blank" rel="noopener">View resume</a></div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.certificates.id_for_label }}" class="form-label">Certificates</label>
+                        {{ form.certificates }}
+                        {% if form.certificates.errors %}<div class="field-error">{{ form.certificates.errors }}</div>{% endif %}
+                        {% if not is_create and teacher.certificates %}
+                        <div class="current-file"><i class="bi bi-paperclip"></i> Current: <a href="{{ teacher.certificates.url }}" target="_blank" rel="noopener">View certificates</a></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-toggle-on"></i></span>
+                    <div><h2>Status</h2><p>Control whether this teacher is active in the system.</p></div>
+                </div>
+                <div class="toggle-row">
                     {{ form.is_active }}
-                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                        Active Teacher (Uncheck to deactivate)
+                    <label for="{{ form.is_active.id_for_label }}">
+                        Active teacher
+                        <span class="sub">Uncheck to deactivate this teacher.</span>
                     </label>
                 </div>
-                {% if form.is_active.errors %}
-                    <div class="text-danger small">{{ form.is_active.errors }}</div>
-                {% endif %}
+                {% if form.is_active.errors %}<div class="field-error">{{ form.is_active.errors }}</div>{% endif %}
+            </section>
+
+            <!-- Actions -->
+            <div class="actions">
+                <a href="{% url 'teachers:teacher_list' %}" class="btn-ghost">Cancel</a>
+                <button type="submit" class="btn-solid" id="submitBtn">
+                    <i class="bi bi-check2"></i><span>{{ button_text }}</span>
+                </button>
             </div>
         </div>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="{% url 'teachers:teacher_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-x-circle"></i> Cancel
-        </a>
-        <button type="submit" class="btn btn-gradient">
-            <i class="bi bi-check-circle"></i> {{ button_text }}
-        </button>
-    </div>
-</form>
-
+    </form>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Form validation feedback
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        
-        form.addEventListener('submit', function(e) {
-            // Add loading state to submit button
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('.tform form');
+        var btn = document.getElementById('submitBtn');
+        if (!form || !btn) return;
+
+        // Loading state on submit
+        form.addEventListener('submit', function () {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border" role="status" aria-hidden="true"></span><span>Processing…</span>';
         });
-        
-        // Preview image before upload
-        const profilePictureInput = document.getElementById('{{ form.profile_picture.id_for_label }}');
-        if (profilePictureInput) {
-            profilePictureInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    console.log('Image selected:', file.name);
-                }
-            });
-        }
     });
 </script>
 {% endblock %}

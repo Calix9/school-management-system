@@ -4,106 +4,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - School Management System</title>
+    <title>Sign in · School Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        :root {
+            --ink: #0f172a;
+            --ink-soft: #475569;
+            --muted: #94a3b8;
+            --line: #e2e8f0;
+            --surface: #ffffff;
+            --brand: #1e3a8a;
+            --brand-600: #1d4ed8;
+            --brand-700: #1e40af;
+            --brand-deep: #0b1b4a;
+            --ring: rgba(29, 78, 216, .18);
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            color: var(--ink);
+            background: var(--surface);
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .auth { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+
+        /* ---------- Brand panel ---------- */
+        .brand-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 48px 56px;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #e8edff;
+            background:
+                radial-gradient(900px 500px at 10% -10%, rgba(59, 130, 246, .35), transparent 60%),
+                radial-gradient(700px 500px at 110% 110%, rgba(99, 102, 241, .28), transparent 60%),
+                var(--brand-deep);
         }
-        .login-container {
-            max-width: 450px;
-            margin: auto;
+        .brand-panel::before {
+            content: "";
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 85%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 85%);
+            pointer-events: none;
         }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        .brand-panel > * { position: relative; }
+
+        .brand-mark { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -.01em; font-size: 1.05rem; color: #fff; }
+        .brand-mark .logo {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: grid; place-items: center;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.18);
+            font-size: 1.15rem;
         }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 30px;
+
+        .brand-copy h1 {
+            font-size: clamp(1.9rem, 2.6vw, 2.6rem);
+            line-height: 1.15;
+            letter-spacing: -.025em;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 16px;
+            max-width: 15ch;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
+        .brand-copy p { color: #b6c3ee; font-size: 1rem; line-height: 1.65; max-width: 42ch; margin: 0 0 32px; }
+
+        .feature-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+        .feature-list li { display: flex; align-items: center; gap: 12px; font-size: .94rem; color: #d6defa; }
+        .feature-list i {
+            width: 30px; height: 30px; border-radius: 8px; flex: none;
+            display: grid; place-items: center;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+            color: #9ec1ff; font-size: .95rem;
         }
-        .btn-primary:hover {
-            opacity: 0.9;
+
+        .brand-foot { font-size: .8rem; color: #8fa0d6; }
+
+        /* ---------- Form panel ---------- */
+        .form-panel { display: flex; flex-direction: column; padding: 32px 24px; background: var(--surface); }
+        .form-wrap { width: 100%; max-width: 400px; margin: auto; }
+
+        .mobile-brand { display: none; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 36px; }
+        .mobile-brand .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--brand); color: #fff; display: grid; place-items: center; }
+
+        .form-wrap h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 6px; }
+        .form-wrap .lede { color: var(--ink-soft); font-size: .95rem; margin: 0 0 28px; }
+
+        .field { margin-bottom: 18px; }
+        .field label { display: block; font-size: .85rem; font-weight: 500; color: var(--ink); margin-bottom: 7px; }
+
+        .input-shell { position: relative; }
+        .input-shell > .lead-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--muted); font-size: 1rem; pointer-events: none; transition: color .15s;
         }
+        .input-shell .form-control {
+            height: 46px;
+            padding: 0 14px 0 42px;
+            font-size: .95rem;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .input-shell .form-control::placeholder { color: #a8b3c4; }
+        .input-shell .form-control:hover { border-color: #cbd5e1; }
+        .input-shell .form-control:focus { border-color: var(--brand-600); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+        .input-shell:focus-within > .lead-icon { color: var(--brand-600); }
+        .input-shell.has-toggle .form-control { padding-right: 46px; }
+
+        .toggle-pw {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            width: 34px; height: 34px; border: 0; background: transparent; border-radius: 8px;
+            color: var(--muted); display: grid; place-items: center; cursor: pointer;
+            transition: background .15s, color .15s;
+        }
+        .toggle-pw:hover { background: #f1f5f9; color: var(--ink-soft); }
+        .toggle-pw:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+        .row-meta { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 24px; }
+        .form-check { margin: 0; display: flex; align-items: center; gap: 8px; padding: 0; }
+        .form-check-input { margin: 0; width: 16px; height: 16px; border-color: #cbd5e1; cursor: pointer; }
+        .form-check-input:checked { background-color: var(--brand-600); border-color: var(--brand-600); }
+        .form-check-input:focus { box-shadow: 0 0 0 4px var(--ring); border-color: var(--brand-600); }
+        .form-check-label { font-size: .875rem; color: var(--ink-soft); cursor: pointer; }
+
+        .btn-signin {
+            width: 100%; height: 46px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: .95rem; font-weight: 600; color: #fff;
+            background: var(--brand-600);
+            border: 0; border-radius: var(--radius);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .12), inset 0 1px 0 rgba(255,255,255,.12);
+            transition: background .15s, box-shadow .15s, transform .05s;
+        }
+        .btn-signin:hover { background: var(--brand-700); }
+        .btn-signin:active { transform: translateY(1px); }
+        .btn-signin:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+        .btn-signin[disabled] { opacity: .75; cursor: progress; }
+        .btn-signin .spinner-border { width: 1rem; height: 1rem; border-width: 2px; }
+
+        .alt-action { text-align: center; margin-top: 28px; font-size: .9rem; color: var(--ink-soft); }
+        .alt-action a { color: var(--brand-600); font-weight: 600; text-decoration: none; }
+        .alt-action a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+        .alert {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: .875rem; padding: 12px 14px; margin-bottom: 20px;
+            border-radius: var(--radius); border-width: 1px;
+        }
+        .alert .bi { margin-top: 2px; }
+        .alert .btn-close { margin-left: auto; padding: 14px; }
+
+        .form-foot { text-align: center; font-size: .78rem; color: var(--muted); margin-top: 32px; }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 991.98px) {
+            .auth { grid-template-columns: 1fr; }
+            .brand-panel { display: none; }
+            .mobile-brand { display: flex; }
+            .form-panel { padding: 32px 20px; background: #f8fafc; }
+            .form-wrap {
+                background: #fff; border: 1px solid var(--line); border-radius: 16px;
+                padding: 32px 24px; box-shadow: 0 8px 30px rgba(15, 23, 42, .06);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="login-container">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h2><i class="bi bi-mortarboard-fill"></i></h2>
-                    <h3 class="mb-0">School Management System</h3>
-                    <p class="mb-0">Sign in to continue</p>
+    <main class="auth">
+
+        <!-- Brand panel (desktop) -->
+        <aside class="brand-panel" aria-hidden="true">
+            <div class="brand-mark">
+                <span class="logo"><i class="bi bi-mortarboard-fill"></i></span>
+                School Management System
+            </div>
+
+            <div class="brand-copy">
+                <h1>Everything your school runs on, in one place.</h1>
+                <p>Manage students, staff, classes and results with a platform built for clarity and day-to-day efficiency.</p>
+                <ul class="feature-list">
+                    <li><i class="bi bi-people"></i> Student and staff records</li>
+                    <li><i class="bi bi-calendar-check"></i> Attendance and timetables</li>
+                    <li><i class="bi bi-bar-chart-line"></i> Grades and performance reports</li>
+                </ul>
+            </div>
+
+            <div class="brand-foot">&copy; {% now "Y" %} School Management System</div>
+        </aside>
+
+        <!-- Form panel -->
+        <section class="form-panel">
+            <div class="form-wrap">
+                <div class="mobile-brand">
+                    <span class="logo"><i class="bi bi-mortarboard-fill"></i></span>
+                    School Management System
                 </div>
-                <div class="card-body p-5">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
 
-                    <form method="post" action="{% url 'accounts:login' %}">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="bi bi-person"></i> Username
-                            </label>
-                            <input type="text" class="form-control" id="username" name="username" required autofocus>
+                <h2>Welcome back</h2>
+                <p class="lede">Sign in to your account to continue.</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <span>{{ message }}</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
                         </div>
+                    {% endfor %}
+                {% endif %}
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="bi bi-lock"></i> Password
-                            </label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                <form method="post" action="{% url 'accounts:login' %}" id="loginForm">
+                    {% csrf_token %}
+
+                    <div class="field">
+                        <label for="username">Username</label>
+                        <div class="input-shell">
+                            <i class="bi bi-person lead-icon" aria-hidden="true"></i>
+                            <input type="text" class="form-control" id="username" name="username"
+                                   placeholder="Enter your username" autocomplete="username" required autofocus>
                         </div>
+                    </div>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember">
-                            <label class="form-check-label" for="remember">
-                                Remember me
-                            </label>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-box-arrow-in-right"></i> Login
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <div class="input-shell has-toggle">
+                            <i class="bi bi-lock lead-icon" aria-hidden="true"></i>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   placeholder="Enter your password" autocomplete="current-password" required>
+                            <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </button>
                         </div>
-                    </form>
-
-                    <hr class="my-4">
-
-                    <div class="text-center">
-                        <a href="{% url 'accounts:register' %}" class="text-decoration-none">
-                            Don't have an account? Register
-                        </a>
                     </div>
-                </div>
-            </div>
 
-            <div class="text-center mt-4 text-white">
-                <p>&copy; 2024 School Management System. All rights reserved.</p>
+                    <div class="row-meta">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">Keep me signed in</label>
+                        </div>
+                        {# Add a "Forgot password?" link here once a reset URL exists #}
+                    </div>
+
+                    <button type="submit" class="btn-signin" id="submitBtn">
+                        <span class="label">Sign in</span>
+                    </button>
+                </form>
+
+                <p class="alt-action">
+                    New here? <a href="{% url 'accounts:register' %}">Create an account</a>
+                </p>
+
+                <p class="form-foot d-lg-none">&copy; {% now "Y" %} School Management System</p>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var pw = document.getElementById('password');
+            var toggle = document.getElementById('togglePw');
+            var icon = toggle.querySelector('i');
+
+            toggle.addEventListener('click', function () {
+                var show = pw.type === 'password';
+                pw.type = show ? 'text' : 'password';
+                icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+                toggle.setAttribute('aria-pressed', show);
+                toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            });
+
+            var form = document.getElementById('loginForm');
+            var btn = document.getElementById('submitBtn');
+            form.addEventListener('submit', function () {
+                if (!form.checkValidity()) return;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border" role="status" aria-hidden="true"></span><span>Signing in…</span>';
+            });
+        })();
+    </script>
 </body>
 </html>

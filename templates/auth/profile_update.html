@@ -4,494 +4,416 @@
 {% block title %}Update Profile - School Management System{% endblock %}
 
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    .profile-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 40px;
-        border-radius: 15px;
+    /* Scoped to .prof so nothing leaks into the base layout */
+    .prof {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        max-width: 1120px; margin: 0 auto;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
     }
-    
-    .profile-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 10px;
+
+    /* Page header */
+    .prof .page-head { margin-bottom: 28px; }
+    .prof .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .prof .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+
+    /* Alerts */
+    .prof .notice {
+        display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 20px;
+        font-size: .875rem; border-radius: 10px; border: 1px solid; line-height: 1.5;
     }
-    
-    .profile-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-        padding: 40px;
-        margin-bottom: 30px;
+    .prof .notice i { margin-top: 2px; }
+    .prof .notice-success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .prof .notice-danger  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .prof .notice-warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .prof .notice-info    { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+
+    /* Panels */
+    .prof .panel {
+        background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
     }
-    
-    .section-title {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .prof .panel-section { padding: 24px; }
+    .prof .panel-section + .panel-section { border-top: 1px solid var(--line-soft); }
+    .prof .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .prof .section-head .icon {
+        width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+        background: var(--brand-50); color: var(--brand); font-size: 1rem; flex: none;
     }
-    
-    .section-title i {
-        font-size: 1.5rem;
-        color: #667eea;
+    .prof .section-head h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .prof .section-head p { margin: 2px 0 0; font-size: .8rem; color: var(--muted); }
+
+    /* Identity card */
+    .prof .identity { padding: 28px 24px 24px; text-align: center; }
+    .prof .avatar {
+        width: 104px; height: 104px; border-radius: 50%; margin: 0 auto 16px; overflow: hidden;
+        display: grid; place-items: center; font-size: 2rem; font-weight: 700; letter-spacing: .02em;
+        color: var(--brand); background: var(--brand-50); border: 1px solid #dbeafe;
+        box-shadow: 0 0 0 4px #fff, 0 0 0 5px var(--line);
     }
-    
-    .form-label {
-        font-weight: 600;
-        color: #4a5568;
-        margin-bottom: 8px;
-        font-size: 0.95rem;
+    .prof .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .prof .identity h3 { font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 8px; }
+    .prof .identity .email { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); margin-top: 10px; word-break: break-all; }
+
+    .prof .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+        font-size: .75rem; font-weight: 600; border-radius: 999px; line-height: 1.5;
+        background: var(--brand-50); color: var(--brand);
     }
-    
-    .form-control, .form-select {
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px 16px;
-        font-size: 0.95rem;
-        transition: all 0.3s;
+    .prof .pill.amber { background: #fffbeb; color: #b45309; }
+
+    .prof .upload-zone { padding: 0 24px 24px; }
+    .prof .upload-hint { display: block; text-align: center; font-size: .78rem; color: var(--faint); margin-top: 8px; }
+    #photoNotice { display: none; margin: 12px 0 0; }
+
+    .prof .facts { border-top: 1px solid var(--line-soft); padding: 8px 24px; }
+    .prof .fact { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+    .prof .fact:last-child { border-bottom: 0; }
+    .prof .fact i { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--canvas); color: var(--muted); font-size: .9rem; flex: none; }
+    .prof .fact .k { font-size: .75rem; color: var(--muted); }
+    .prof .fact .v { font-size: .875rem; font-weight: 600; }
+
+    /* Fields */
+    .prof .form-label { display: block; font-size: .85rem; font-weight: 500; color: var(--ink); margin-bottom: 7px; }
+    .prof .req { color: #dc2626; margin-left: 2px; }
+    .prof .shell { position: relative; }
+    .prof .shell > .lead {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--faint); font-size: 1rem; pointer-events: none; transition: color .15s;
     }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    .prof .shell:focus-within > .lead { color: var(--brand); }
+    .prof .form-control, .prof .form-select {
+        min-height: 44px; font-size: .92rem; color: var(--ink); background-color: #fff;
+        border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+        transition: border-color .15s, box-shadow .15s;
     }
-    
-    .input-group {
-        position: relative;
+    .prof .shell .form-control, .prof .shell .form-select { padding-left: 42px; }
+    .prof textarea.form-control { padding: 10px 14px; }
+    .prof .form-control::placeholder { color: #a8b3c4; }
+    .prof .form-control:hover:not(:disabled), .prof .form-select:hover:not(:disabled) { border-color: #cbd5e1; }
+    .prof .form-control:focus, .prof .form-select:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+    .prof .form-control:disabled, .prof .form-select:disabled { background: var(--canvas); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+    .prof .help-text { display: block; font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+    .prof .form-check { display: flex; align-items: flex-start; gap: 10px; padding: 0; margin: 0; }
+    .prof .form-check-input { margin: 2px 0 0; width: 16px; height: 16px; flex: none; border-color: #cbd5e1; cursor: pointer; }
+    .prof .form-check-input:checked { background-color: var(--brand); border-color: var(--brand); }
+    .prof .form-check-input:focus { box-shadow: 0 0 0 4px var(--ring); border-color: var(--brand); }
+    .prof .form-check-label { font-size: .875rem; color: var(--ink-soft); cursor: pointer; }
+
+    /* Buttons */
+    .prof .btn-solid, .prof .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 18px; font-size: .875rem; font-weight: 600; border-radius: 10px; text-decoration: none; cursor: pointer;
+        transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
     }
-    
-    .input-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #a0aec0;
-        font-size: 1.1rem;
-        z-index: 10;
+    .prof .btn-solid { color: #fff; background: var(--brand); border: 1px solid var(--brand); box-shadow: 0 1px 2px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.12); }
+    .prof .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .prof .btn-solid[disabled] { opacity: .75; cursor: progress; }
+    .prof .btn-ghost { color: var(--ink); background: #fff; border: 1px solid var(--line); }
+    .prof .btn-ghost:hover { background: var(--canvas); border-color: #cbd5e1; color: var(--ink); }
+    .prof .btn-solid:focus-visible, .prof .btn-ghost:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .prof .btn-full { width: 100%; }
+    .prof .spinner-border { width: 1rem; height: 1rem; border-width: 2px; }
+
+    /* Action bar */
+    .prof .actions {
+        display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+        padding: 16px 24px; background: var(--canvas); border-top: 1px solid var(--line);
+        border-radius: 0 0 var(--radius) var(--radius);
     }
-    
-    .input-group .form-control {
-        padding-left: 45px;
+    @media (max-width: 575.98px) {
+        .prof .panel-section { padding: 20px 16px; }
+        .prof .actions { padding: 14px 16px; }
+        .prof .actions > * { flex: 1; }
     }
-    
-    .btn-update {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        padding: 14px 40px;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 10px;
-        color: white;
-        transition: all 0.3s;
-    }
-    
-    .btn-update:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        color: white;
-    }
-    
-    .btn-cancel {
-        background: white;
-        border: 2px solid #e2e8f0;
-        padding: 14px 40px;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 10px;
-        color: #4a5568;
-        transition: all 0.3s;
-    }
-    
-    .btn-cancel:hover {
-        background: #f7fafc;
-        border-color: #cbd5e0;
-    }
-    
-    .user-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        color: white;
-        font-weight: 700;
-        margin: 0 auto 20px;
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        border: 5px solid white;
-    }
-    
-    .avatar-container {
-        text-align: center;
-        padding: 20px 0;
-    }
-    
-    .avatar-container h4 {
-        color: #2d3748;
-        font-weight: 700;
-        font-size: 1.3rem;
-    }
-    
-    .avatar-container .badge {
-        font-size: 0.85rem;
-        padding: 8px 15px;
-        font-weight: 600;
-    }
-    
-    .info-section {
-        margin-top: 20px;
-    }
-    
-    .info-item {
-        transition: all 0.3s;
-    }
-    
-    .info-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .avatar-upload {
-        margin-top: 15px;
-    }
-    
-    .help-text {
-        font-size: 0.85rem;
-        color: #718096;
-        margin-top: 5px;
-    }
-    
-    .alert {
-        border-radius: 10px;
-        border: none;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-    }
+    @media (prefers-reduced-motion: reduce) { .prof * { transition: none !important; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="profile-header text-center">
-        <h1><i class="bi bi-person-gear"></i> Update Profile</h1>
-        <p class="mb-0">Manage your account information and preferences</p>
-    </div>
-    
+<div class="prof py-3">
+
+    <header class="page-head">
+        <h1>Update profile</h1>
+        <p>Manage your account information and preferences.</p>
+    </header>
+
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
+            <div class="notice notice-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}" role="alert">
                 <i class="bi bi-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
-                {{ message }}
+                <span>{{ message }}</span>
             </div>
         {% endfor %}
     {% endif %}
-    
-    <div class="row">
-        <!-- Profile Picture Section -->
+
+    <div class="notice notice-danger" id="formError" role="alert" style="display:none">
+        <i class="bi bi-exclamation-circle"></i>
+        <span id="formErrorText"></span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Identity -->
         <div class="col-lg-4">
-            <div class="profile-card">
-                <div class="avatar-container">
-                    <div class="user-avatar" id="avatarPreview">
+            <aside class="panel">
+                <div class="identity">
+                    <div class="avatar" id="avatarPreview">
                         {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            <img src="{{ user.profile_picture.url }}" alt="Profile photo">
                         {% else %}
                             <span id="avatarInitials">{{ user.first_name.0|upper|default:"U" }}{{ user.last_name.0|upper|default:"" }}</span>
                         {% endif %}
                     </div>
-                    <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
-                    <p class="text-muted mb-3">
-                        <span class="badge bg-primary">
-                            <i class="bi bi-shield-check"></i> {{ user.get_role_display|default:"User" }}
-                        </span>
-                    </p>
-                    <p class="text-muted small">
-                        <i class="bi bi-envelope"></i> {{ user.email }}
-                    </p>
+                    <h3>{{ user.get_full_name|default:user.username }}</h3>
+                    <span class="pill"><i class="bi bi-shield-check"></i>{{ user.get_role_display|default:"User" }}</span>
+                    {% if user.is_staff %}<span class="pill amber ms-1"><i class="bi bi-star-fill"></i>Admin access</span>{% endif %}
+                    <div class="email"><i class="bi bi-envelope"></i>{{ user.email }}</div>
                 </div>
-                
-                <hr class="my-4">
-                
-                <div class="d-grid gap-2 mb-4">
-                    <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
-                    <button class="btn btn-outline-primary" type="button" onclick="document.getElementById('profilePictureInput').click()">
-                        <i class="bi bi-camera-fill"></i> {% if user.profile_picture %}Change Photo{% else %}Upload Photo{% endif %}
+
+                <div class="upload-zone">
+                    <input type="file" id="profilePictureInput" accept="image/*" hidden>
+                    <button class="btn-ghost btn-full" type="button" onclick="document.getElementById('profilePictureInput').click()">
+                        <i class="bi bi-camera"></i> {% if user.profile_picture %}Change photo{% else %}Upload photo{% endif %}
                     </button>
-                    <small class="text-muted text-center">JPG, PNG or GIF (Max 5MB)</small>
-                </div>
-                
-                <div class="info-section">
-                    <div class="info-item mb-3 p-3 bg-light rounded">
-                        <div class="d-flex align-items-center mb-1">
-                            <i class="bi bi-calendar-event text-primary me-2"></i>
-                            <small class="text-muted">Member Since</small>
-                        </div>
-                        <strong>{{ user.date_joined|date:"F d, Y" }}</strong>
-                    </div>
-                    
-                    <div class="info-item p-3 bg-light rounded">
-                        <div class="d-flex align-items-center mb-1">
-                            <i class="bi bi-clock-history text-success me-2"></i>
-                            <small class="text-muted">Last Login</small>
-                        </div>
-                        <strong>{{ user.last_login|date:"M d, Y - H:i"|default:"Never" }}</strong>
+                    <span class="upload-hint">JPG, PNG or GIF, up to 5MB</span>
+                    <div class="notice notice-info" id="photoNotice" role="status">
+                        <i class="bi bi-info-circle"></i>
+                        <span>New photo selected. Click <strong>Save changes</strong> to apply it.</span>
                     </div>
                 </div>
-                
-                {% if user.is_staff %}
-                <div class="alert alert-success mt-4 py-2 px-3">
-                    <i class="bi bi-star-fill"></i>
-                    <small><strong>Admin Access</strong></small>
+
+                <div class="facts">
+                    <div class="fact">
+                        <i class="bi bi-calendar-event"></i>
+                        <div><div class="k">Member since</div><div class="v">{{ user.date_joined|date:"F d, Y" }}</div></div>
+                    </div>
+                    <div class="fact">
+                        <i class="bi bi-clock-history"></i>
+                        <div><div class="k">Last login</div><div class="v">{{ user.last_login|date:"M d, Y - H:i"|default:"Never" }}</div></div>
+                    </div>
                 </div>
-                {% endif %}
-            </div>
+            </aside>
         </div>
-        
-        <!-- Profile Form Section -->
+
+        <!-- Form -->
         <div class="col-lg-8">
-            <div class="profile-card">
-                <form method="post" action="{% url 'accounts:profile_update' %}" enctype="multipart/form-data" id="profileForm">
-                    {% csrf_token %}
-                    <input type="file" name="profile_picture" id="profilePictureFormInput" style="display: none;">
-                    
-                    <!-- Personal Information -->
-                    <div class="mb-4">
-                        <div class="section-title">
-                            <i class="bi bi-person-circle"></i>
-                            Personal Information
+            <form method="post" action="{% url 'accounts:profile_update' %}" enctype="multipart/form-data" id="profileForm" novalidate>
+                {% csrf_token %}
+                <input type="file" name="profile_picture" id="profilePictureFormInput" hidden>
+
+                <div class="panel">
+
+                    <!-- Personal information -->
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <span class="icon"><i class="bi bi-person"></i></span>
+                            <div><h2>Personal information</h2><p>Your name and contact details.</p></div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <i class="bi bi-person input-icon"></i>
-                                    <input type="text" 
-                                           name="first_name" 
-                                           class="form-control" 
-                                           value="{{ user.first_name }}"
-                                           placeholder="Enter first name"
-                                           required>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="first_name">First name<span class="req">*</span></label>
+                                <div class="shell">
+                                    <i class="bi bi-person lead"></i>
+                                    <input type="text" id="first_name" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="Enter first name" autocomplete="given-name" required>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <i class="bi bi-person input-icon"></i>
-                                    <input type="text" 
-                                           name="last_name" 
-                                           class="form-control" 
-                                           value="{{ user.last_name }}"
-                                           placeholder="Enter last name"
-                                           required>
+                            <div class="col-md-6">
+                                <label class="form-label" for="last_name">Last name<span class="req">*</span></label>
+                                <div class="shell">
+                                    <i class="bi bi-person lead"></i>
+                                    <input type="text" id="last_name" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Enter last name" autocomplete="family-name" required>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email Address <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <i class="bi bi-envelope input-icon"></i>
-                                    <input type="email" 
-                                           name="email" 
-                                           class="form-control" 
-                                           value="{{ user.email }}"
-                                           placeholder="Enter email"
-                                           required>
+                            <div class="col-md-6">
+                                <label class="form-label" for="email">Email address<span class="req">*</span></label>
+                                <div class="shell">
+                                    <i class="bi bi-envelope lead"></i>
+                                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" placeholder="name@example.com" autocomplete="email" required>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Phone Number</label>
-                                <div class="input-group">
-                                    <i class="bi bi-telephone input-icon"></i>
-                                    <input type="tel" 
-                                           name="phone_number" 
-                                           class="form-control" 
-                                           value="{{ user.phone_number|default:'' }}"
-                                           placeholder="Enter phone number">
+                            <div class="col-md-6">
+                                <label class="form-label" for="phone_number">Phone number</label>
+                                <div class="shell">
+                                    <i class="bi bi-telephone lead"></i>
+                                    <input type="tel" id="phone_number" name="phone_number" class="form-control" value="{{ user.phone_number|default:'' }}" placeholder="Enter phone number" autocomplete="tel">
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Account Information -->
-                    <div class="mb-4">
-                        <div class="section-title">
-                            <i class="bi bi-key-fill"></i>
-                            Account Information
+                    </section>
+
+                    <!-- Account information -->
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <span class="icon"><i class="bi bi-key"></i></span>
+                            <div><h2>Account</h2><p>Sign-in and access details.</p></div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Username</label>
-                                <div class="input-group">
-                                    <i class="bi bi-at input-icon"></i>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           value="{{ user.username }}"
-                                           disabled>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="username">Username</label>
+                                <div class="shell">
+                                    <i class="bi bi-at lead"></i>
+                                    <input type="text" id="username" class="form-control" value="{{ user.username }}" disabled>
                                 </div>
-                                <small class="help-text">Username cannot be changed</small>
+                                <small class="help-text">Username cannot be changed.</small>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Role</label>
-                                <div class="input-group">
-                                    <i class="bi bi-person-badge input-icon"></i>
+                            <div class="col-md-6">
+                                <label class="form-label" for="role">Role</label>
+                                <div class="shell">
+                                    <i class="bi bi-person-badge lead"></i>
                                     {% if request.user.is_superuser and user.id != request.user.id %}
-                                    <select name="role" class="form-select">
+                                    <select name="role" id="role" class="form-select">
                                         {% for value, label in user.ROLE_CHOICES %}
                                             <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
                                     </select>
                                     {% else %}
-                                    <input type="text" 
-                                           class="form-control" 
-                                           value="{{ user.get_role_display|default:'User' }}"
-                                           disabled>
+                                    <input type="text" id="role" class="form-control" value="{{ user.get_role_display|default:'User' }}" disabled>
                                     {% endif %}
                                 </div>
-                                <small class="help-text">{% if request.user.is_superuser and user.id != request.user.id %}You can change the user's role{% else %}Contact admin to change role{% endif %}</small>
+                                <small class="help-text">{% if request.user.is_superuser and user.id != request.user.id %}You can change this user's role.{% else %}Contact an admin to change your role.{% endif %}</small>
                             </div>
-                                                {% if request.user.is_superuser and user.id != request.user.id %}
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Superuser Status</label>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="is_superuser" id="isSuperuserCheck" {% if user.is_superuser %}checked{% endif %}>
-                                                        <label class="form-check-label" for="isSuperuserCheck">
-                                                            Grant superuser (full admin) rights
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                {% endif %}
-                        </div>
-                        
-                        <div class="alert alert-info d-flex align-items-center">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <div>
-                                <strong>Change Password:</strong> 
-                                To update your password, contact your administrator or use the admin panel.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Additional Information -->
-                    <div class="mb-4">
-                        <div class="section-title">
-                            <i class="bi bi-gear-fill"></i>
-                            Additional Information
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea name="address" 
-                                      class="form-control" 
-                                      rows="3" 
-                                      placeholder="Enter your address...">{{ user.address|default:'' }}</textarea>
-                            <small class="help-text">Optional: Your physical address</small>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Date of Birth</label>
-                                <div class="input-group">
-                                    <i class="bi bi-calendar input-icon"></i>
-                                    <input type="date" 
-                                           name="date_of_birth" 
-                                           class="form-control"
-                                           value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}">
+                            {% if request.user.is_superuser and user.id != request.user.id %}
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_superuser" id="isSuperuserCheck" {% if user.is_superuser %}checked{% endif %}>
+                                    <label class="form-check-label" for="isSuperuserCheck">
+                                        <strong>Superuser status</strong><br>
+                                        <span class="text-muted">Grant superuser (full admin) rights</span>
+                                    </label>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Gender</label>
-                                <select name="gender" class="form-select">
-                                    <option value="">Select Gender</option>
-                                {% if user.role == 'TEACHER' and user.teacher_profile %}
-                                <div class="section-title"><i class="bi bi-mortarboard"></i> Professional Information</div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Qualification</label>
-                                        <input type="text" name="qualification" class="form-control" value="{{ user.teacher_profile.qualification }}" placeholder="e.g., B.Ed, M.Ed, PhD">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Specialization</label>
-                                        <input type="text" name="specialization" class="form-control" value="{{ user.teacher_profile.specialization }}" placeholder="e.g., Mathematics, Science">
-                                    </div>
+                            {% endif %}
+                        </div>
+                        <div class="notice notice-info mt-4 mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            <span><strong>Change password:</strong> to update your password, contact your administrator or use the admin panel.</span>
+                        </div>
+                    </section>
+
+                    <!-- Additional information -->
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <span class="icon"><i class="bi bi-sliders"></i></span>
+                            <div><h2>Additional information</h2><p>Optional personal details.</p></div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="address">Address</label>
+                                <textarea id="address" name="address" class="form-control" rows="3" placeholder="Enter your address">{{ user.address|default:'' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="date_of_birth">Date of birth</label>
+                                <div class="shell">
+                                    <i class="bi bi-calendar lead"></i>
+                                    <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}">
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Experience (years)</label>
-                                        <input type="number" name="experience_years" class="form-control" value="{{ user.teacher_profile.experience_years }}" min="0">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Employment Type</label>
-                                        <input type="text" name="employment_type" class="form-control" value="{{ user.teacher_profile.get_employment_type_display }}" disabled>
-                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="gender">Gender</label>
+                                <div class="shell">
+                                    <i class="bi bi-gender-ambiguous lead"></i>
+                                    <select name="gender" id="gender" class="form-select">
+                                        <option value="">Select gender</option>
+                                        <option value="MALE" {% if user.gender == 'MALE' %}selected{% endif %}>Male</option>
+                                        <option value="FEMALE" {% if user.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                                        <option value="OTHER" {% if user.gender == 'OTHER' %}selected{% endif %}>Other</option>
+                                    </select>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Certifications</label>
-                                    <textarea name="certifications" class="form-control" rows="2">{{ user.teacher_profile.certifications }}</textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Bio</label>
-                                    <textarea name="bio" class="form-control" rows="2">{{ user.teacher_profile.bio }}</textarea>
-                                </div>
-                                {% endif %}
-                                {% if user.role == 'STAFF' and user.staff_profile %}
-                                <div class="section-title"><i class="bi bi-briefcase"></i> Staff Information</div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Department</label>
-                                        <input type="text" name="department" class="form-control" value="{{ user.staff_profile.get_department_display }}" disabled>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Designation</label>
-                                        <input type="text" name="designation" class="form-control" value="{{ user.staff_profile.designation }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Joining Date</label>
-                                        <input type="date" name="joining_date" class="form-control" value="{{ user.staff_profile.joining_date|date:'Y-m-d' }}">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Salary</label>
-                                        <input type="number" name="salary" class="form-control" value="{{ user.staff_profile.salary }}" min="0" step="0.01">
-                                    </div>
-                                </div>
-                                {% endif %}
-                                    <option value="MALE">Male</option>
-                                    <option value="FEMALE">Female</option>
-                                    <option value="OTHER">Other</option>
-                                </select>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="d-flex gap-3 justify-content-end">
-                        <a href="{% url 'dashboard' %}" class="btn btn-cancel">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-update">
-                            <i class="bi bi-check-circle"></i> Update Profile
+                    </section>
+
+                    {% if user.role == 'TEACHER' and user.teacher_profile %}
+                    <!-- Professional information (teachers) -->
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <span class="icon"><i class="bi bi-mortarboard"></i></span>
+                            <div><h2>Professional information</h2><p>Your teaching background.</p></div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="qualification">Qualification</label>
+                                <input type="text" id="qualification" name="qualification" class="form-control" value="{{ user.teacher_profile.qualification }}" placeholder="e.g., B.Ed, M.Ed, PhD">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="specialization">Specialization</label>
+                                <input type="text" id="specialization" name="specialization" class="form-control" value="{{ user.teacher_profile.specialization }}" placeholder="e.g., Mathematics, Science">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="experience_years">Experience (years)</label>
+                                <input type="number" id="experience_years" name="experience_years" class="form-control" value="{{ user.teacher_profile.experience_years }}" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="employment_type">Employment type</label>
+                                <input type="text" id="employment_type" name="employment_type" class="form-control" value="{{ user.teacher_profile.get_employment_type_display }}" disabled>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="certifications">Certifications</label>
+                                <textarea id="certifications" name="certifications" class="form-control" rows="2">{{ user.teacher_profile.certifications }}</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="bio">Bio</label>
+                                <textarea id="bio" name="bio" class="form-control" rows="3">{{ user.teacher_profile.bio }}</textarea>
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    {% if user.role == 'STAFF' and user.staff_profile %}
+                    <!-- Staff information -->
+                    <section class="panel-section">
+                        <div class="section-head">
+                            <span class="icon"><i class="bi bi-briefcase"></i></span>
+                            <div><h2>Staff information</h2><p>Your role within the school.</p></div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="department">Department</label>
+                                <input type="text" id="department" name="department" class="form-control" value="{{ user.staff_profile.get_department_display }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="designation">Designation</label>
+                                <input type="text" id="designation" name="designation" class="form-control" value="{{ user.staff_profile.designation }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="joining_date">Joining date</label>
+                                <input type="date" id="joining_date" name="joining_date" class="form-control" value="{{ user.staff_profile.joining_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="salary">Salary</label>
+                                <input type="number" id="salary" name="salary" class="form-control" value="{{ user.staff_profile.salary }}" min="0" step="0.01">
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="actions">
+                        <a href="{% url 'dashboard' %}" class="btn-ghost">Cancel</a>
+                        <button type="submit" class="btn-solid" id="saveBtn">
+                            <i class="bi bi-check2"></i><span>Save changes</span>
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -499,64 +421,74 @@
 
 {% block extra_js %}
 <script>
-    // Profile picture preview
-    const profilePictureInput = document.getElementById('profilePictureInput');
-    const profilePictureFormInput = document.getElementById('profilePictureFormInput');
-    const avatarPreview = document.getElementById('avatarPreview');
-    
-    profilePictureInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Validate file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File size must be less than 5MB');
-                return;
-            }
-            
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file');
-                return;
-            }
-            
-            // Transfer file to form input
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            profilePictureFormInput.files = dataTransfer.files;
-            
-            // Preview image
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-            };
-            reader.readAsDataURL(file);
-            
-            // Auto-submit form
-            if (confirm('Upload this photo?')) {
-                document.getElementById('profileForm').submit();
-            }
+(function () {
+    var form = document.getElementById('profileForm');
+    var photoInput = document.getElementById('profilePictureInput');
+    var formPhotoInput = document.getElementById('profilePictureFormInput');
+    var avatarPreview = document.getElementById('avatarPreview');
+    var photoNotice = document.getElementById('photoNotice');
+    var errorBox = document.getElementById('formError');
+    var errorText = document.getElementById('formErrorText');
+    var saveBtn = document.getElementById('saveBtn');
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.style.display = 'flex';
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function clearError() { errorBox.style.display = 'none'; }
+
+    // Profile picture: validate, copy into the form's hidden input, preview
+    photoInput.addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        clearError();
+
+        if (file.size > 5 * 1024 * 1024) {
+            photoInput.value = '';
+            return showError('The photo must be smaller than 5MB.');
         }
+        if (!file.type.startsWith('image/')) {
+            photoInput.value = '';
+            return showError('Please select an image file (JPG, PNG or GIF).');
+        }
+
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        formPhotoInput.files = dt.files;
+
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            avatarPreview.innerHTML = '';
+            var img = document.createElement('img');
+            img.src = ev.target.result;
+            img.alt = 'Profile photo preview';
+            avatarPreview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+
+        photoNotice.style.display = 'flex';
     });
-    
+
     // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const firstName = document.querySelector('[name="first_name"]').value.trim();
-        const lastName = document.querySelector('[name="last_name"]').value.trim();
-        const email = document.querySelector('[name="email"]').value.trim();
-        
+    form.addEventListener('submit', function (e) {
+        clearError();
+        var firstName = form.querySelector('[name="first_name"]').value.trim();
+        var lastName = form.querySelector('[name="last_name"]').value.trim();
+        var email = form.querySelector('[name="email"]').value.trim();
+
         if (!firstName || !lastName || !email) {
             e.preventDefault();
-            alert('Please fill in all required fields (First Name, Last Name, Email)');
-            return false;
+            return showError('Please fill in all required fields: first name, last name and email.');
         }
-        
-        // Email validation
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(email)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             e.preventDefault();
-            alert('Please enter a valid email address');
-            return false;
+            return showError('Please enter a valid email address.');
         }
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border" role="status" aria-hidden="true"></span><span>Saving…</span>';
     });
+})();
 </script>
 {% endblock %}

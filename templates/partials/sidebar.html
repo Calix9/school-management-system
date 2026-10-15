@@ -1,68 +1,164 @@
 {% load static %}
-<div class="position-sticky pt-3">
+<style>
+    /* Scoped to .side-nav so nothing leaks into the rest of the layout */
+    .side-nav {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --canvas: #f1f5f9;
+        --brand: #1d4ed8;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        padding: 12px 12px 24px;
+    }
+    .side-nav .nav { gap: 2px; }
+
+    /* Section labels */
+    .side-nav .group-label {
+        padding: 0 12px; margin: 22px 0 6px;
+        font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
+    }
+
+    /* Row: main link + optional quick-add button */
+    .side-nav .nav-row { display: flex; align-items: center; gap: 4px; }
+    .side-nav .nav-row .nav-link { flex: 1; min-width: 0; }
+
+    /* Links */
+    .side-nav .nav-link {
+        position: relative; display: flex; align-items: center; gap: 12px;
+        padding: 8px 12px; font-size: .875rem; font-weight: 500; color: var(--ink-soft);
+        border-radius: 8px; background: transparent; border: 0; width: 100%; text-align: left;
+        transition: background .15s, color .15s;
+    }
+    .side-nav .nav-link i { font-size: 1.05rem; color: var(--faint); flex: none; transition: color .15s; }
+    .side-nav .nav-link:hover { background: var(--canvas); color: var(--ink); }
+    .side-nav .nav-link:hover i { color: var(--ink-soft); }
+    .side-nav .nav-link.active { background: var(--brand-50); color: var(--brand); font-weight: 600; }
+    .side-nav .nav-link.active i { color: var(--brand); }
+    .side-nav .nav-link.active::before {
+        content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px;
+        border-radius: 0 3px 3px 0; background: var(--brand);
+    }
+    .side-nav .nav-link:focus-visible, .side-nav .add-btn:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+    /* Quick-add button */
+    .side-nav .add-btn {
+        flex: none; width: 28px; height: 28px; display: grid; place-items: center;
+        border-radius: 7px; color: var(--faint); font-size: .85rem; text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+    .side-nav .add-btn:hover { background: var(--brand-50); color: var(--brand); }
+
+    /* Collapsible group */
+    .side-nav .collapse-toggle .chev { margin-left: auto; font-size: .7rem; transition: transform .2s; }
+    .side-nav .collapse-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+    .side-nav .sub-nav { margin: 2px 0 2px 21px; padding-left: 12px; border-left: 1px solid var(--line); }
+    .side-nav .sub-nav .nav-link { padding: 7px 10px; font-size: .84rem; }
+
+    /* Footer link */
+    .side-nav .side-divider { height: 1px; background: var(--line); margin: 20px 12px 12px; border: 0; }
+
+    @media (prefers-reduced-motion: reduce) { .side-nav * { transition: none !important; } }
+</style>
+
+{% with ns=request.resolver_match.namespace un=request.resolver_match.url_name %}
+<div class="position-sticky pt-3 side-nav">
     <ul class="nav flex-column">
+
         <li class="nav-item">
-            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+            <a class="nav-link {% if request.path == '/dashboard/' or un == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
                 <i class="bi bi-house-door"></i> Dashboard
             </a>
         </li>
 
         {% if user.is_admin or user.is_staff %}
-        <li class="nav-item mt-3">
-            <span class="text-uppercase text-muted small ps-3">Admin Management</span>
+        <li class="nav-item group-label" role="presentation">Admin management</li>
+
+        <li class="nav-item">
+            <a class="nav-link {% if un == 'school_info_update' %}active{% endif %}" href="{% url 'school_info_update' %}">
+                <i class="bi bi-building"></i> School Info
+            </a>
         </li>
-            <li class="nav-item ms-2">
-                <a class="nav-link" href="{% url 'school_info_update' %}"><i class="bi bi-building"></i> School Info</a>
-            </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'students:student_list' %}"><i class="bi bi-people"></i> Students</a>
-            <a class="nav-link text-success" href="{% url 'students:student_create' %}"><i class="bi bi-plus-circle"></i> Add Student</a>
+
+        <li class="nav-item nav-row">
+            <a class="nav-link {% if ns == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
+                <i class="bi bi-people"></i> Students
+            </a>
+            <a class="add-btn" href="{% url 'students:student_create' %}" title="Add student" aria-label="Add student"><i class="bi bi-plus-lg"></i></a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'teachers:teacher_list' %}"><i class="bi bi-person-badge"></i> Teachers</a>
-            <a class="nav-link text-success" href="{% url 'teachers:teacher_create' %}"><i class="bi bi-plus-circle"></i> Add Teacher</a>
+
+        <li class="nav-item nav-row">
+            <a class="nav-link {% if ns == 'teachers' %}active{% endif %}" href="{% url 'teachers:teacher_list' %}">
+                <i class="bi bi-person-badge"></i> Teachers
+            </a>
+            <a class="add-btn" href="{% url 'teachers:teacher_create' %}" title="Add teacher" aria-label="Add teacher"><i class="bi bi-plus-lg"></i></a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'classes:class_list' %}"><i class="bi bi-door-open"></i> Classes</a>
-            <a class="nav-link text-success" href="{% url 'classes:class_create' %}"><i class="bi bi-plus-circle"></i> Add Class</a>
+
+        <li class="nav-item nav-row">
+            <a class="nav-link {% if ns == 'classes' and un != 'subject_list' %}active{% endif %}" href="{% url 'classes:class_list' %}">
+                <i class="bi bi-door-open"></i> Classes
+            </a>
+            <a class="add-btn" href="{% url 'classes:class_create' %}" title="Add class" aria-label="Add class"><i class="bi bi-plus-lg"></i></a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'accounts:user_list' %}"><i class="bi bi-people"></i> Users</a>
-            <a class="nav-link text-success" href="/admin/accounts/user/add/"><i class="bi bi-plus-circle"></i> Add User</a>
+
+        <li class="nav-item nav-row">
+            <a class="nav-link {% if ns == 'accounts' and un == 'user_list' %}active{% endif %}" href="{% url 'accounts:user_list' %}">
+                <i class="bi bi-person-gear"></i> Users
+            </a>
+            <a class="add-btn" href="/admin/accounts/user/add/" title="Add user" aria-label="Add user"><i class="bi bi-plus-lg"></i></a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'parents:parent_list' %}"><i class="bi bi-person-hearts"></i> Parents</a>
+
+        <li class="nav-item">
+            <a class="nav-link {% if ns == 'parents' %}active{% endif %}" href="{% url 'parents:parent_list' %}">
+                <i class="bi bi-person-hearts"></i> Parents
+            </a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'staff:staff_list' %}"><i class="bi bi-person-workspace"></i> Staff</a>
+
+        <li class="nav-item">
+            <a class="nav-link {% if ns == 'staff' %}active{% endif %}" href="{% url 'staff:staff_list' %}">
+                <i class="bi bi-person-workspace"></i> Staff
+            </a>
         </li>
         {% endif %}
 
-        <li class="nav-item mt-3">
-            <span class="text-uppercase text-muted small ps-3">Academic</span>
+        <li class="nav-item group-label" role="presentation">Academic</li>
+
+        <li class="nav-item">
+            <a class="nav-link {% if un == 'subject_list' %}active{% endif %}" href="{% url 'classes:subject_list' %}">
+                <i class="bi bi-book"></i> Subjects
+            </a>
         </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'classes:subject_list' %}"><i class="bi bi-book"></i> Subjects</a>
-        </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'exams:exam_list' %}"><i class="bi bi-clipboard-data"></i> Exams</a>
-            <a class="nav-link text-success" href="{% url 'exams:exam_create' %}"><i class="bi bi-plus-circle"></i> Add Exam</a>
+
+        <li class="nav-item nav-row">
+            <a class="nav-link {% if ns == 'exams' %}active{% endif %}" href="{% url 'exams:exam_list' %}">
+                <i class="bi bi-clipboard-data"></i> Exams
+            </a>
+            <a class="add-btn" href="{% url 'exams:exam_create' %}" title="Add exam" aria-label="Add exam"><i class="bi bi-plus-lg"></i></a>
         </li>
 
         {% if user.is_teacher or user.is_admin %}
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="{% url 'attendance:attendance_home' %}"><i class="bi bi-calendar-check"></i> Attendance</a>
+        <li class="nav-item">
+            <a class="nav-link {% if ns == 'attendance' %}active{% endif %}" href="{% url 'attendance:attendance_home' %}">
+                <i class="bi bi-calendar-check"></i> Attendance
+            </a>
         </li>
         {% endif %}
 
         {% if user.is_teacher or user.is_admin or user.is_staff %}
-        <li class="nav-item mt-3">
-            <span class="text-uppercase text-muted small ps-3">Reports</span>
-        </li>
-        <li class="nav-item ms-2">
-            <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#resultsMenu"><i class="bi bi-file-earmark-text"></i> Results & Reports</a>
+        <li class="nav-item group-label" role="presentation">Reports</li>
+
+        <li class="nav-item">
+            <button type="button" class="nav-link collapse-toggle" data-bs-toggle="collapse" data-bs-target="#resultsMenu"
+                    aria-expanded="false" aria-controls="resultsMenu">
+                <i class="bi bi-file-earmark-text"></i> Results &amp; Reports
+                <i class="bi bi-chevron-right chev"></i>
+            </button>
             <div class="collapse" id="resultsMenu">
-                <ul class="nav flex-column ms-3">
+                <ul class="nav flex-column sub-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'exams:exam_list' %}">
                             <i class="bi bi-pencil-square"></i> Process Reports
@@ -72,40 +168,44 @@
             </div>
         </li>
         {% else %}
+        <li class="nav-item group-label" role="presentation">Reports</li>
         <li class="nav-item">
+            {# TODO: point this at the student results URL once it exists #}
             <a class="nav-link" href="#">
                 <i class="bi bi-trophy"></i> My Results
             </a>
         </li>
         {% endif %}
-        
+
         {% if user.is_admin %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'fees:fee_structure' %}">
-                    <i class="bi bi-currency-dollar"></i> Fees
-                </a>
-            </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'promotions:promotion_list' %}">
-                    <i class="bi bi-arrow-up-circle"></i> Promotions
-                </a>
-            </li>
-        {% endif %}
-        
+        <li class="nav-item group-label" role="presentation">Finance &amp; progression</li>
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'notifications:notice_board' %}">
+            <a class="nav-link {% if ns == 'fees' %}active{% endif %}" href="{% url 'fees:fee_structure' %}">
+                <i class="bi bi-cash-coin"></i> Fees
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if ns == 'promotions' %}active{% endif %}" href="{% url 'promotions:promotion_list' %}">
+                <i class="bi bi-arrow-up-circle"></i> Promotions
+            </a>
+        </li>
+        {% endif %}
+
+        <li class="nav-item group-label" role="presentation">Communication</li>
+        <li class="nav-item">
+            <a class="nav-link {% if un == 'notice_board' %}active{% endif %}" href="{% url 'notifications:notice_board' %}">
                 <i class="bi bi-pin-angle"></i> Notice Board
             </a>
         </li>
-        
+
         {% if user.is_admin or user.is_staff %}
-            <li class="nav-item mt-3">
-                <hr>
-                <a class="nav-link" href="/admin/">
-                    <i class="bi bi-gear"></i> Admin Panel
-                </a>
-            </li>
+        <li class="nav-item" role="presentation"><hr class="side-divider"></li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/">
+                <i class="bi bi-gear"></i> Admin Panel
+            </a>
+        </li>
         {% endif %}
     </ul>
 </div>
+{% endwith %}

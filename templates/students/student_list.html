@@ -5,74 +5,208 @@
 
 {% block title %}{% trans "Students List" %} - SMS{% endblock %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Scoped to .stu so nothing leaks into the base layout */
+    .stu {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+    }
+    .stu .tone-blue   { --t-bg: #eff6ff; --t-fg: #1d4ed8; }
+    .stu .tone-green  { --t-bg: #ecfdf5; --t-fg: #047857; }
+    .stu .tone-amber  { --t-bg: #fffbeb; --t-fg: #b45309; }
+    .stu .tone-violet { --t-bg: #f5f3ff; --t-fg: #6d28d9; }
+    .stu .tone-red    { --t-bg: #fef2f2; --t-fg: #b91c1c; }
+    .stu .tone-slate  { --t-bg: #f1f5f9; --t-fg: #475569; }
+
+    /* Header */
+    .stu .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+    .stu .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .stu .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+    .stu .head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* Buttons */
+    .stu .btn-solid, .stu .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 9px 16px; font-size: .85rem; font-weight: 600; border-radius: 10px; text-decoration: none; cursor: pointer; white-space: nowrap;
+        transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+    }
+    .stu .btn-solid { color: #fff; background: var(--brand); border: 1px solid var(--brand); box-shadow: 0 1px 2px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.12); }
+    .stu .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .stu .btn-ghost { color: var(--ink); background: #fff; border: 1px solid var(--line); }
+    .stu .btn-ghost:hover { background: var(--canvas); border-color: #cbd5e1; color: var(--ink); }
+    .stu .btn-solid:focus-visible, .stu .btn-ghost:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+
+    /* KPI cards */
+    .stu .stat {
+        height: 100%; padding: 18px 20px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04); display: flex; align-items: center; gap: 14px;
+    }
+    .stu .stat-icon { width: 42px; height: 42px; border-radius: 11px; flex: none; display: grid; place-items: center; font-size: 1.15rem; background: var(--t-bg); color: var(--t-fg); }
+    .stu .stat-label { font-size: .8rem; font-weight: 500; color: var(--muted); }
+    .stu .stat-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+
+    /* Panel */
+    .stu .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(15, 23, 42, .04); overflow: hidden; }
+
+    /* Toolbar */
+    .stu .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .stu .toolbar .search { position: relative; flex: 1 1 260px; min-width: 0; }
+    .stu .toolbar .search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; transition: color .15s; }
+    .stu .toolbar .search:focus-within i { color: var(--brand); }
+    .stu .form-control, .stu .form-select {
+        min-height: 40px; font-size: .875rem; color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04); transition: border-color .15s, box-shadow .15s;
+    }
+    .stu .toolbar .search .form-control { padding-left: 40px; }
+    .stu .form-control::placeholder { color: #a8b3c4; }
+    .stu .form-control:hover, .stu .form-select:hover { border-color: #cbd5e1; }
+    .stu .form-control:focus, .stu .form-select:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+    .stu .toolbar .form-select { flex: 0 1 200px; }
+    .stu .clear-link { font-size: .85rem; font-weight: 500; color: var(--muted); text-decoration: none; padding: 8px 6px; }
+    .stu .clear-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Table */
+    .stu .table-clean { width: 100%; margin: 0; font-size: .875rem; --bs-table-bg: transparent; }
+    .stu .table-clean thead th {
+        padding: 11px 16px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+        color: var(--muted); background: var(--canvas); border-bottom: 1px solid var(--line); white-space: nowrap;
+    }
+    .stu .table-clean tbody td { padding: 13px 16px; vertical-align: middle; border-bottom: 1px solid var(--line-soft); color: var(--ink); }
+    .stu .table-clean tbody tr:last-child td { border-bottom: 0; }
+    .stu .table-clean tbody tr:hover td { background: var(--canvas); }
+    .stu .adm { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--brand); }
+
+    .stu .person { display: flex; align-items: center; gap: 12px; min-width: 180px; }
+    .stu .avatar {
+        width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+        font-size: .72rem; font-weight: 600; background: var(--brand-50); color: var(--brand); border: 1px solid #dbeafe;
+    }
+    .stu .person .name { font-weight: 600; line-height: 1.3; }
+
+    .stu .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: .75rem; font-weight: 600;
+        border-radius: 999px; line-height: 1.5; background: var(--t-bg); color: var(--t-fg); white-space: nowrap;
+    }
+    .stu .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; }
+    .stu .muted { color: var(--muted); }
+
+    .stu .row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .stu .icon-btn {
+        width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--line);
+        background: #fff; color: var(--ink-soft); font-size: .9rem; text-decoration: none; transition: background .15s, color .15s, border-color .15s;
+    }
+    .stu .icon-btn:hover { background: var(--brand-50); border-color: #bfdbfe; color: var(--brand); }
+    .stu .icon-btn:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--ring); }
+
+    .stu .table-foot { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--canvas); font-size: .82rem; color: var(--muted); }
+
+    /* Empty */
+    .stu .empty { text-align: center; padding: 56px 20px; }
+    .stu .empty .ring { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 14px; display: grid; place-items: center; background: var(--canvas); color: var(--faint); font-size: 1.5rem; border: 1px solid var(--line); }
+    .stu .empty h4 { font-size: 1.05rem; font-weight: 600; margin: 0 0 6px; }
+    .stu .empty p { color: var(--muted); font-size: .9rem; margin: 0 0 20px; }
+
+    @media (max-width: 767.98px) {
+        .stu .page-head h1 { font-size: 1.4rem; }
+        .stu .toolbar .form-select, .stu .toolbar .btn-solid { flex: 1 1 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { .stu * { transition: none !important; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Page Header -->
-    <div class="page-header-modern">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h1>
-                    <i class="bi bi-people-fill"></i>
-                    {% trans "Students Management" %}
-                </h1>
-                <p>{% trans "Manage all student records and information" %}</p>
+<div class="stu container-fluid py-4">
+
+    <!-- Page header -->
+    <header class="page-head">
+        <div>
+            <h1>{% trans "Students Management" %}</h1>
+            <p>{% trans "Manage all student records and information" %}</p>
+        </div>
+        {% if user.is_admin or user.is_staff %}
+        <div class="head-actions">
+            <a href="{% url 'students:student_template_download' %}" class="btn-ghost">
+                <i class="bi bi-download"></i> {% trans "Download Import Template" %}
+            </a>
+            <a href="{% url 'students:student_import' %}" class="btn-ghost">
+                <i class="bi bi-upload"></i> {% trans "Import Students" %}
+            </a>
+            <a href="{% url 'students:student_create' %}" class="btn-solid">
+                <i class="bi bi-plus-lg"></i> {% trans "Add Student" %}
+            </a>
+        </div>
+        {% endif %}
+    </header>
+
+    <!-- Stats -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat tone-blue">
+                <span class="stat-icon"><i class="bi bi-people-fill"></i></span>
+                <div>
+                    <div class="stat-label">{% trans "Total Students" %}</div>
+                    <div class="stat-value">{{ students.count|intcomma }}</div>
+                </div>
             </div>
-            <div class="mt-3 mt-md-0">
-                {% if user.is_admin or user.is_staff %}
-                <a href="{% url 'students:student_create' %}" class="btn btn-light btn-lg">
-                    <i class="bi bi-plus-circle-fill"></i> {% trans "Add Student" %}
-                </a>
-                {% endif %}
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat tone-green">
+                <span class="stat-icon"><i class="bi bi-check-circle-fill"></i></span>
+                <div>
+                    <div class="stat-label">{% trans "Active" %}</div>
+                    <div class="stat-value">{{ students|length|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat tone-violet">
+                <span class="stat-icon"><i class="bi bi-person-badge-fill"></i></span>
+                <div>
+                    <div class="stat-label">{% trans "Male" %}</div>
+                    <div class="stat-value">{{ male_count|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat tone-amber">
+                <span class="stat-icon"><i class="bi bi-person-hearts"></i></span>
+                <div>
+                    <div class="stat-label">{% trans "Female" %}</div>
+                    <div class="stat-value">{{ female_count|intcomma }}</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card-mini primary">
-                <div class="stat-icon-mini">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="stat-label-mini">{% trans "Total Students" %}</div>
-                <div class="stat-value-mini">{{ students.count|intcomma }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card-mini success">
-                <div class="stat-icon-mini">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
-                <div class="stat-label-mini">{% trans "Active" %}</div>
-                <div class="stat-value-mini">{{ students|length|intcomma }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card-mini info">
-                <div class="stat-icon-mini">
-                    <i class="bi bi-person-badge-fill"></i>
-                </div>
-                <div class="stat-label-mini">{% trans "Male" %}</div>
-                <div class="stat-value-mini">{{ male_count|intcomma }}</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card-mini warning">
-                <div class="stat-icon-mini">
-                    <i class="bi bi-person-hearts"></i>
-                </div>
-                <div class="stat-label-mini">{% trans "Female" %}</div>
-                <div class="stat-value-mini">{{ female_count|intcomma }}</div>
-            </div>
-        </div>
-    </div>
+    <!-- Table panel -->
+    <section class="panel">
 
-    <!-- Search and Filter -->
-    <div class="filters-section">
-        <form method="get" class="filter-group">
-            <input type="text" name="q" class="search-box-modern flex-grow-1" 
-                   placeholder="🔍 {% trans 'Search by name or admission number' %}" value="{{ query }}">
-            <select name="class" class="form-select" style="max-width: 200px;">
+        <!-- Search and filter -->
+        <form method="get" class="toolbar" role="search">
+            <div class="search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="form-control"
+                       placeholder="{% trans 'Search by name or admission number' %}"
+                       aria-label="{% trans 'Search by name or admission number' %}" value="{{ query }}">
+            </div>
+            <select name="class" class="form-select" aria-label="{% trans 'All Classes' %}">
                 <option value="">{% trans 'All Classes' %}</option>
                 {% for class in classes %}
                 <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"s" %}selected{% endif %}>
@@ -80,109 +214,85 @@
                 </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn-gradient-primary">
+            <button type="submit" class="btn-solid">
                 <i class="bi bi-search"></i> {% trans "Search" %}
             </button>
+            {% if query or class_filter %}
+            <a href="?" class="clear-link">{% trans "Clear" %}</a>
+            {% endif %}
         </form>
-    </div>
 
-    <!-- Download and Import Buttons -->
-    {% if user.is_admin or user.is_staff %}
-    <div class="mb-4">
-        <a href="{% url 'students:student_template_download' %}" class="btn btn-outline-primary btn-lg me-2">
-            <i class="bi bi-download"></i> Download Import Template
-        </a>
-        <a href="{% url 'students:student_import' %}" class="btn btn-gradient-primary btn-lg">
-            <i class="bi bi-upload"></i> Import Students
-        </a>
-    </div>
-    {% endif %}
-
-    <!-- Students Table -->
-    <div class="card-modern">
-        <div class="card-header">
-            <i class="bi bi-list-ul me-2"></i>
-            {% trans "Students List" %}
-        </div>
-        <div class="card-body">
-            {% if students %}
-            <div class="table-responsive">
-                <table class="table table-modern">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Admission No." %}</th>
-                            <th>{% trans "First Name" %}</th>
-                            <th>{% trans "Middle Name" %}</th>
-                            <th>{% trans "Last Name" %}</th>
-                            <th>{% trans "Class" %}</th>
-                            <th>{% trans "Gender" %}</th>
-                            <th>{% trans "Parent" %}</th>
-                            <th>{% trans "Status" %}</th>
-                            <th>{% trans "Actions" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                        <tr>
-                            <td><strong class="text-primary">{{ student.admission_number|intcomma }}</strong></td>
-                            <td>{{ student.user.first_name }}</td>
-                            <td>{{ student.middle_name }}</td>
-                            <td>{{ student.user.last_name }}</td>
-                            <td>
-                                <span class="badge-modern bg-info">
-                                    {{ student.class_assigned.name|default:_('Not Assigned') }}
-                                </span>
-                            </td>
-                            <td>{{ student.get_gender_display }}</td>
-                            <td>{{ student.parent.user.get_full_name|default:"N/A" }}</td>
-                            <td>
-                                {% if student.is_active %}
-                                <span class="badge-modern bg-success">
-                                    <i class="bi bi-check-circle-fill me-1"></i>{% trans "Active" %}
-                                </span>
-                                {% else %}
-                                <span class="badge-modern bg-danger">
-                                    <i class="bi bi-x-circle-fill me-1"></i>{% trans "Inactive" %}
-                                </span>
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-clean">
+                <thead>
+                    <tr>
+                        <th>{% trans "Admission No." %}</th>
+                        <th>{% trans "Student" %}</th>
+                        <th>{% trans "Class" %}</th>
+                        <th>{% trans "Gender" %}</th>
+                        <th>{% trans "Parent" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th class="text-end">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td><span class="adm">{{ student.admission_number|intcomma }}</span></td>
+                        <td>
+                            <div class="person">
+                                <span class="avatar" aria-hidden="true">{{ student.user.first_name.0|upper }}{{ student.user.last_name.0|upper }}</span>
+                                <span class="name">{{ student.user.first_name }} {{ student.middle_name|default:"" }} {{ student.user.last_name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="pill tone-blue">{{ student.class_assigned.name|default:_('Not Assigned') }}</span>
+                        </td>
+                        <td>{{ student.get_gender_display }}</td>
+                        <td>{% if student.parent.user.get_full_name %}{{ student.parent.user.get_full_name }}{% else %}<span class="muted">N/A</span>{% endif %}</td>
+                        <td>
+                            {% if student.is_active %}
+                            <span class="pill tone-green">{% trans "Active" %}</span>
+                            {% else %}
+                            <span class="pill tone-red">{% trans "Inactive" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{% url 'students:student_detail' student.pk %}" class="icon-btn"
+                                   title="{% trans 'View Details' %}" aria-label="{% trans 'View Details' %}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.is_admin or user.is_staff %}
+                                <a href="{% url 'students:student_update' student.pk %}" class="icon-btn"
+                                   title="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                                 {% endif %}
-                            </td>
-                            <td>
-                                <div class="action-buttons-group">
-                                    <a href="{% url 'students:student_detail' student.pk %}" 
-                                       class="action-btn-sm btn-gradient-info" title="{% trans 'View Details' %}">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </a>
-                                    {% if user.is_admin or user.is_staff %}
-                                    <a href="{% url 'students:student_update' student.pk %}" 
-                                       class="action-btn-sm btn-gradient-primary" title="{% trans 'Edit' %}">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Footer -->
-            <div class="mt-3 d-flex justify-content-between align-items-center">
-                <p class="text-muted mb-0">{% blocktrans %}Showing {{ students.count|intcomma }} student(s){% endblocktrans %}</p>
-            </div>
-            {% else %}
-            <div class="empty-state-modern">
-                <i class="bi bi-inbox"></i>
-                <h4>{% trans "No Students Found" %}</h4>
-                <p>{% trans "Start by adding your first student to the system" %}</p>
-                {% if user.is_admin or user.is_staff %}
-                <a href="{% url 'students:student_create' %}" class="btn-gradient-primary">
-                    <i class="bi bi-plus-circle-fill"></i> {% trans "Add First Student" %}
-                </a>
-                {% endif %}
-            </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-foot">
+            {% blocktrans with total=students.count|intcomma %}Showing {{ total }} student(s){% endblocktrans %}
+        </div>
+        {% else %}
+        <div class="empty">
+            <div class="ring"><i class="bi bi-inbox"></i></div>
+            <h4>{% trans "No Students Found" %}</h4>
+            <p>{% trans "Start by adding your first student to the system" %}</p>
+            {% if user.is_admin or user.is_staff %}
+            <a href="{% url 'students:student_create' %}" class="btn-solid">
+                <i class="bi bi-plus-lg"></i> {% trans "Add First Student" %}
+            </a>
             {% endif %}
         </div>
-    </div>
+        {% endif %}
+    </section>
 </div>
 {% endblock %}

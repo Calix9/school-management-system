@@ -3,122 +3,232 @@
 
 {% block title %}{{ title }} - SMS{% endblock %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Scoped to .cform so nothing leaks into the base layout.
+       Inputs are styled by type, so this works whatever widget classes forms.py sets. */
+    .cform {
+        --ink: #0f172a;
+        --ink-soft: #475569;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --line-soft: #f1f5f9;
+        --canvas: #f8fafc;
+        --brand: #1d4ed8;
+        --brand-700: #1e40af;
+        --brand-50: #eff6ff;
+        --ring: rgba(29, 78, 216, .18);
+        --radius: 12px;
+        max-width: 760px; margin: 0 auto;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .cform .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .cform .page-head h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+    .cform .page-head p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+
+    .cform .btn-solid, .cform .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 18px; font-size: .875rem; font-weight: 600; border-radius: 10px; text-decoration: none; cursor: pointer; white-space: nowrap;
+        transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+    }
+    .cform .btn-solid { color: #fff; background: var(--brand); border: 1px solid var(--brand); box-shadow: 0 1px 2px rgba(15,23,42,.12), inset 0 1px 0 rgba(255,255,255,.12); }
+    .cform .btn-solid:hover { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+    .cform .btn-solid[disabled] { opacity: .75; cursor: progress; }
+    .cform .btn-ghost { color: var(--ink); background: #fff; border: 1px solid var(--line); }
+    .cform .btn-ghost:hover { background: var(--canvas); border-color: #cbd5e1; color: var(--ink); }
+    .cform .btn-solid:focus-visible, .cform .btn-ghost:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .cform .spinner-border { width: 1rem; height: 1rem; border-width: 2px; }
+
+    .cform .notice {
+        display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 20px;
+        font-size: .875rem; border-radius: 10px; border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; line-height: 1.5;
+    }
+    .cform .notice i { margin-top: 2px; }
+    .cform .notice .btn-close { margin-left: auto; padding: 4px; }
+
+    .cform .panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+    .cform .panel-section { padding: 24px; }
+    .cform .panel-section + .panel-section { border-top: 1px solid var(--line-soft); }
+    .cform .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .cform .section-head .icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--brand-50); color: var(--brand); font-size: 1rem; flex: none; }
+    .cform .section-head h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .cform .section-head p { margin: 2px 0 0; font-size: .8rem; color: var(--muted); }
+
+    .cform .form-label { display: block; font-size: .85rem; font-weight: 500; color: var(--ink); margin-bottom: 7px; }
+    .cform .req { color: #dc2626; margin-left: 2px; }
+    .cform .help-text { display: block; font-size: .78rem; color: var(--muted); margin-top: 6px; }
+    .cform .field-error { font-size: .8rem; color: #b91c1c; margin-top: 6px; }
+
+    .cform input[type="text"], .cform input[type="email"], .cform input[type="number"], .cform input[type="date"],
+    .cform select, .cform textarea {
+        display: block; width: 100%; min-height: 44px; padding: 9px 14px;
+        font-family: inherit; font-size: .92rem; color: var(--ink); background-color: #fff;
+        border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .cform textarea { min-height: 96px; resize: vertical; }
+    .cform input::placeholder, .cform textarea::placeholder { color: #a8b3c4; }
+    .cform input:hover:not(:disabled):not([type="checkbox"]), .cform select:hover:not(:disabled), .cform textarea:hover:not(:disabled) { border-color: #cbd5e1; }
+    .cform input:focus:not([type="checkbox"]), .cform select:focus, .cform textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--ring); outline: 0; }
+    .cform input:disabled, .cform select:disabled, .cform textarea:disabled { background: var(--canvas); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+
+    .cform input[type="checkbox"] { width: 18px; height: 18px; margin: 0; flex: none; cursor: pointer; accent-color: var(--brand); }
+    .cform input[type="checkbox"]:focus-visible { outline: 0; box-shadow: 0 0 0 4px var(--ring); }
+    .cform .toggle-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--canvas); }
+    .cform .toggle-row input { margin-top: 2px; }
+    .cform .toggle-row label { cursor: pointer; font-size: .9rem; font-weight: 500; margin: 0; }
+    .cform .toggle-row .sub { display: block; font-size: .8rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+
+    .cform .actions {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 16px 24px; background: var(--canvas); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius);
+    }
+    @media (max-width: 575.98px) {
+        .cform .panel-section { padding: 20px 16px; }
+        .cform .actions { padding: 14px 16px; }
+        .cform .actions > * { flex: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) { .cform * { transition: none !important; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="page-header-modern">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
+<div class="cform py-3">
+
+    <header class="page-head">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>Fill in the form below to {{ button_text|lower }}.</p>
+        </div>
+        <a href="{% url 'classes:class_list' %}" class="btn-ghost">
+            <i class="bi bi-arrow-left"></i> Back to list
+        </a>
+    </header>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="notice alert alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
             <div>
-                <h1>
-                    <i class="bi bi-door-open"></i>
-                    {{ title }}
-                </h1>
-                <p>Fill in the form below to {{ button_text|lower }}</p>
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
             </div>
-            <div class="mt-3 mt-md-0">
-                <a href="{% url 'classes:class_list' %}" class="btn btn-light btn-lg">
-                    <i class="bi bi-arrow-left"></i> Back to List
-                </a>
-            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="card-modern">
-                <div class="card-body">
-                    <form method="post" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        {% if form.non_field_errors %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        {% endif %}
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Class Name <span class="text-danger">*</span></label>
-                                {{ form.name }}
-                                {% if form.name.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Level <span class="text-danger">*</span></label>
-                                {{ form.level }}
-                                {% if form.level.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.level.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label class="form-label">Stream</label>
-                                {{ form.stream }}
-                                {% if form.stream.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.stream.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Room Number</label>
-                                {{ form.room_number }}
-                                {% if form.room_number.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.room_number.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label class="form-label">Capacity <span class="text-danger">*</span></label>
-                                {{ form.capacity }}
-                                {% if form.capacity.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.capacity.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Academic Year <span class="text-danger">*</span></label>
-                                {{ form.academic_year }}
-                                {% if form.academic_year.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.academic_year.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label class="form-label">Class Teacher</label>
-                                {{ form.class_teacher }}
-                                {% if form.class_teacher.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.class_teacher.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Active</label>
-                                <div class="form-check">
-                                    {{ form.is_active }}
-                                    <label class="form-check-label">Is Active</label>
-                                </div>
-                                {% if form.is_active.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.is_active.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-2">
-                            <div class="col-12">
-                                <label class="form-label">Description</label>
-                                {{ form.description }}
-                                {% if form.description.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-gradient-primary btn-lg w-100">{{ button_text }}</button>
-                        </div>
-                    </form>
+        {% endif %}
+
+        <div class="panel">
+
+            <!-- Class details -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-door-open"></i></span>
+                    <div><h2>Class details</h2><p>Name, level and location.</p></div>
                 </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Class name<span class="req">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="field-error">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.level.id_for_label }}" class="form-label">Level<span class="req">*</span></label>
+                        {{ form.level }}
+                        {% if form.level.errors %}<div class="field-error">{{ form.level.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.stream.id_for_label }}" class="form-label">Stream</label>
+                        {{ form.stream }}
+                        {% if form.stream.errors %}<div class="field-error">{{ form.stream.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.room_number.id_for_label }}" class="form-label">Room number</label>
+                        {{ form.room_number }}
+                        {% if form.room_number.errors %}<div class="field-error">{{ form.room_number.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Allocation -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-people"></i></span>
+                    <div><h2>Capacity and staffing</h2><p>Size, academic year and class teacher.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacity<span class="req">*</span></label>
+                        {{ form.capacity }}
+                        {% if form.capacity.errors %}<div class="field-error">{{ form.capacity.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.academic_year.id_for_label }}" class="form-label">Academic year<span class="req">*</span></label>
+                        {{ form.academic_year }}
+                        {% if form.academic_year.errors %}<div class="field-error">{{ form.academic_year.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.class_teacher.id_for_label }}" class="form-label">Class teacher</label>
+                        {{ form.class_teacher }}
+                        {% if form.class_teacher.errors %}<div class="field-error">{{ form.class_teacher.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Additional -->
+            <section class="panel-section">
+                <div class="section-head">
+                    <span class="icon"><i class="bi bi-card-text"></i></span>
+                    <div><h2>Additional information</h2><p>Optional notes and status.</p></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="field-error">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <div class="toggle-row">
+                            {{ form.is_active }}
+                            <label for="{{ form.is_active.id_for_label }}">
+                                Active class
+                                <span class="sub">Inactive classes are hidden from day-to-day selection.</span>
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}<div class="field-error">{{ form.is_active.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <div class="actions">
+                <a href="{% url 'classes:class_list' %}" class="btn-ghost">Cancel</a>
+                <button type="submit" class="btn-solid" id="submitBtn">
+                    <i class="bi bi-check2"></i><span>{{ button_text }}</span>
+                </button>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('.cform form');
+        var btn = document.getElementById('submitBtn');
+        if (!form || !btn) return;
+        form.addEventListener('submit', function () {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border" role="status" aria-hidden="true"></span><span>Saving…</span>';
+        });
+    });
+</script>
 {% endblock %}
