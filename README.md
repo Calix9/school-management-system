@@ -403,9 +403,9 @@ python manage.py check --deploy
 
 ## 📞 Contact
 
-- **Project Maintainer:** Your Name
-- **Email:** your.email@example.com
-- **Website:** https://yourwebsite.com
+- **Project Maintainer:** Kelvin Mathew Mambosasa
+- **Email:** calvinmambosasa@gmail.com
+
 
 ---
 
